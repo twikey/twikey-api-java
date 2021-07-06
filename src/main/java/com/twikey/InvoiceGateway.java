@@ -110,9 +110,12 @@ public class InvoiceGateway {
                 .put("city", customer.getCity())
                 .put("zip", customer.getZip())
                 .put("country", customer.getCountry())
-                .put("mobile", customer.getMobile())
-                .put("companyName", customer.getCompanyName())
-                .put("coc", customer.getCoc());
+                .put("mobile", customer.getMobile());
+
+        if (customer.getCompanyName() != null) {
+            customerAsJson.put("companyName", customer.getCompanyName())
+                    .put("coc", customer.getCoc());
+        }
 
         JSONObject invoice = new JSONObject()
                 .put("customer", customerAsJson)

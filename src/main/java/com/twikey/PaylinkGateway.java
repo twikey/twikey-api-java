@@ -57,8 +57,10 @@ public class PaylinkGateway {
             params.put("zip", customer.getZip());
             params.put("country", customer.getCountry());
             params.put("mobile", customer.getMobile());
-            params.put("companyName", customer.getCompanyName());
-            params.put("coc", customer.getCoc());
+            if(customer.getCompanyName() != null){
+                params.put("companyName", customer.getCompanyName());
+                params.put("coc", customer.getCoc());
+            }
         }
 
         URL myurl = twikeyClient.getUrl("/payment/link");
