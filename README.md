@@ -15,10 +15,13 @@ payment options of your favorite PSP to allow other customers to pay as well.
 
 ## Requirements ##
 
+[![Maven Build](https://github.com/twikey/twikey-api-java/actions/workflows/maven-build.yml/badge.svg)](https://github.com/twikey/twikey-api-java/actions/workflows/maven-build.yml)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.twikey/twikey-api-java/badge.svg?gav=true)](https://search.maven.org/artifact/com.twikey/twikey-api-java)
+
 To use the Twikey API client, the following things are required:
 
 + Get yourself a [Twikey account](https://www.twikey.com).
-+ Java >= 8
++ Java >= 11
 + Up-to-date OpenSSL (or other SSL/TLS toolkit)
 
 ## Installation ##
@@ -29,7 +32,7 @@ with [maven](https://maven.apache.org).
     <dependency>
       <groupId>com.twikey</groupId>
       <artifactId>twikey-api-java</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
+      <version>0.1.1</version>
     </dependency>
 
 ## How to create anything ##
