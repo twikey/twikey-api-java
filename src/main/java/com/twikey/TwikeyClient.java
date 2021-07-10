@@ -22,19 +22,19 @@ import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 /**
  * Eg. usage or see unittests for more info
  *
- * <pre></pre>
+ * <pre>
  * String apiKey = "87DA7055C5D18DC5F3FC084F9F208AB335340977"; // found in https://www.twikey.com/r/admin#/c/settings/api
  * long ct = 1420; // found @ https://www.twikey.com/r/admin#/c/template
- * TwikeyAPI api = new TwikeyAPI(apiKey,true);
- * System.out.println(api.createInvoice(ct,customer,invoiceDetails));
- * System.out.println(api.inviteMandate(ct,null,new HashMap<>()));
+ * TwikeyAPI api = new TwikeyAPI(apiKey);
+ * System.out.println(api.invoice().create(ct,customer,invoiceDetails));
+ * System.out.println(api.document().create(ct,null,Map.of()));
  * </pre>
  */
 public class TwikeyClient {
 
     private static final String UTF_8 = "UTF-8";
 
-    private static final String DEFAULT_USER_HEADER = "twikey/java-1.0";
+    private static final String DEFAULT_USER_HEADER = "twikey/java-v0.1.0";
     private static final String PROD_ENVIRONMENT = "https://api.twikey.com/creditor";
     private static final String TEST_ENVIRONMENT = "https://api.beta.twikey.com/creditor";
 
@@ -204,7 +204,7 @@ public class TwikeyClient {
     }
 
     /**
-     * @param websitekey Provided in Settings > Website
+     * @param websitekey Provided in Settings - Website
      * @param document   Mandatenumber or other
      * @param status     Outcome of the request
      * @param token      If provided in the initial request
@@ -235,18 +235,19 @@ public class TwikeyClient {
     }
 
     /**
-     * @param websitekey       Provided in Settings > Website
+     * @param websitekey       Provided in Settings - Website
      * @param document         Mandatenumber or other
      * @param encryptedAccount encrypted account info
+     * @return new String[]{iban,bic}
      */
-    public static String decryptAccountInformation(String websitekey, String document, String encryptedAccount) {
+    public static String[] decryptAccountInformation(String websitekey, String document, String encryptedAccount) {
         String key = document + websitekey;
         try {
             byte[] keyBytes = MessageDigest.getInstance("MD5").digest(key.getBytes(StandardCharsets.UTF_8));
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, "AES"), new IvParameterSpec(keyBytes));
             byte[] val = cipher.doFinal(DatatypeConverter.parseHexBinary(encryptedAccount));
-            return new String(val, StandardCharsets.UTF_8);
+            return new String(val, StandardCharsets.UTF_8).split("/");
         } catch (Exception e) {
             throw new RuntimeException("Exception decrypting : " + encryptedAccount, e);
         }
@@ -255,7 +256,7 @@ public class TwikeyClient {
     /**
      * For use when enhanced security on the API is required
      */
-    public static long generateOtp(String salt, String privateKey) throws GeneralSecurityException {
+    private static long generateOtp(String salt, String privateKey) throws GeneralSecurityException {
         if (privateKey == null)
             throw new IllegalArgumentException("Invalid key");
 

@@ -24,65 +24,6 @@ public class InvoiceGateway {
     }
 
     /**
-     * <table>
-     * <thead>
-     * <tr>
-     * <th>Name</th>
-     * <th>Description</th>
-     * <th>Required</th>
-     * <th>Type</th>
-     * </tr>
-     * </thead>
-     * <tbody><tr>
-     * <td>id</td>
-     * <td>UUID of the invoice (optional)</td>
-     * <td>No</td>
-     * <td>string</td>
-     * </tr>
-     * <tr>
-     * <td>number</td>
-     * <td>Invoice number</td>
-     * <td>Yes</td>
-     * <td>string</td>
-     * </tr>
-     * <tr>
-     * <td>title</td>
-     * <td>Message to the debtor</td>
-     * <td>Yes</td>
-     * <td>string</td>
-     * </tr>
-     * <tr>
-     * <td>remittance</td>
-     * <td>Payment message, if empty then title will be used</td>
-     * <td>No</td>
-     * <td>string</td>
-     * </tr>
-     * <tr>
-     * <td>amount</td>
-     * <td>Amount to be billed</td>
-     * <td>Yes</td>
-     * <td>string</td>
-     * </tr>
-     * <tr>
-     * <td>date</td>
-     * <td>Invoice date</td>
-     * <td>Yes</td>
-     * <td>date</td>
-     * </tr>
-     * <tr>
-     * <td>duedate</td>
-     * <td>Due date</td>
-     * <td>Yes</td>
-     * <td>date</td>
-     * </tr>
-     * <tr>
-     * <td>pdf</td>
-     * <td>Base64 encoded document</td>
-     * <td>No</td>
-     * <td>string</td>
-     * </tr>
-     * </tbody></table>
-     *
      * @param ct             Template to use can be found @ https://www.twikey.com/r/admin#/c/template
      * @param customer       Customer details
      * @param invoiceDetails Details specific to the invoice
@@ -97,6 +38,8 @@ public class InvoiceGateway {
      *                       "status": "BOOKED",
      *                       "url": "https://yourpage.beta.twikey.com/invoice.html?fec44175-b4fe-414c-92aa-9d0a7dd0dbf2"
      *                   }</pre>
+     * @throws IOException   When no connection could be made
+     * @throws com.twikey.TwikeyClient.UserException When Twikey returns a user error (400)
      */
     public JSONObject create(long ct, Customer customer, Map<String, String> invoiceDetails) throws IOException, TwikeyClient.UserException {
 

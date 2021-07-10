@@ -42,6 +42,8 @@ public class PaylinkGateway {
      * @param customer    Customer details
      * @param linkDetails Map containing any of the parameters in the above table
      * @return Url to redirect the customer to or to send in an email
+     * @throws IOException   When no connection could be made
+     * @throws com.twikey.TwikeyClient.UserException When Twikey returns a user error (400)
      */
     public JSONObject create(long ct, Customer customer, Map<String, String> linkDetails) throws IOException, TwikeyClient.UserException {
         Map<String, String> params = new HashMap<>(linkDetails);

@@ -38,13 +38,15 @@ public class DocumentGateway {
      * <li>sendInvite	Send out invite email directly	No	boolean</li>
      * <li>document	Add a contract in base64 format	No	string</li>
      * <li>amount	In euro for a transaction via a first payment or post signature via an SDD transaction	No	string</li>
-     * <li>token	(optional) token to be returned in the exit-url (lenght<100)	No	string</li>
+     * <li>token	(optional) token to be returned in the exit-url (lenght &lt; 100)	No	string</li>
      * <li>requireValidation	Always start with the registration page, even with all known mandate details	No	boolean</li>
      * </ul>
      *
      * @param ct             Template to use can be found @ https://www.twikey.com/r/admin#/c/template
      * @param customer       Customer details
      * @param mandateDetails Map containing any of the parameters in the above table
+     * @throws IOException   When no connection could be made
+     * @throws com.twikey.TwikeyClient.UserException When Twikey returns a user error (400)
      * @return Url to redirect the customer to or to send in an email
      */
     public JSONObject create(long ct, Customer customer, Map<String, String> mandateDetails) throws IOException, TwikeyClient.UserException {

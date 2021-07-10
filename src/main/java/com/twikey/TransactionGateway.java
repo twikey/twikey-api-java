@@ -38,8 +38,8 @@ public class TransactionGateway {
      *                       "ref": null,
      *                       "date": "2017-09-16T14:32:05Z"
      *                     }</pre>
-     * @throws IOException
-     * @throws TwikeyClient.UserException
+     * @throws IOException   When no connection could be made
+     * @throws com.twikey.TwikeyClient.UserException When Twikey returns a user error (400)
      */
     public JSONObject create(String mandateNumber, Map<String, String> transactionDetails) throws IOException, TwikeyClient.UserException {
         Map<String, String> params = new HashMap<>(transactionDetails);
