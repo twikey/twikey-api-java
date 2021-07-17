@@ -63,7 +63,7 @@ public class InvoiceGateway {
         JSONObject invoice = new JSONObject()
                 .put("customer", customerAsJson)
                 .put("date", invoiceDetails.getOrDefault("date", LocalDate.now().toString()))
-                .put("duedate", invoiceDetails.getOrDefault("date", LocalDate.now().plusMonths(1).toString()))
+                .put("duedate", invoiceDetails.getOrDefault("duedate", LocalDate.now().plusMonths(1).toString()))
                 .put("ct", ct);
 
         for (Map.Entry<String, String> entry : invoiceDetails.entrySet()) {

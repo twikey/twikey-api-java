@@ -116,7 +116,7 @@ public class PaylinkGateway {
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
                     JSONObject json = new JSONObject(new JSONTokener(br));
 
-                    JSONArray messagesArr = json.getJSONArray("Messages");
+                    JSONArray messagesArr = json.getJSONArray("Links");
                     isEmpty = messagesArr.isEmpty();
                     if (!isEmpty) {
                         for (int i = 0; i < messagesArr.length(); i++) {
