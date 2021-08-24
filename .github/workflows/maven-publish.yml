@@ -4,12 +4,8 @@
 name: Maven Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      releaseversion:
-        description: 'Release version'
-        required: true
-        default: '0.1.0'
+  release:
+    types: [created]
 
 jobs:
   build:

@@ -44,7 +44,7 @@ public class TwikeyClient {
     private final String apiKey;
     private String privateKey;
 
-    private final String endpoint;
+    private String endpoint;
     private long lastLogin;
     private String sessionToken;
     private String userAgent = DEFAULT_USER_HEADER;
@@ -56,11 +56,10 @@ public class TwikeyClient {
 
     /**
      * @param apikey API key
-     * @param test   Use the test environment
      */
-    public TwikeyClient(String apikey, boolean test) {
+    public TwikeyClient(String apikey) {
         this.apiKey = apikey;
-        endpoint = test ? TEST_ENVIRONMENT : PROD_ENVIRONMENT;
+        endpoint = PROD_ENVIRONMENT;
         documentGateway = new DocumentGateway(this);
         invoiceGateway = new InvoiceGateway(this);
         transactionGateway = new TransactionGateway(this);
@@ -77,11 +76,14 @@ public class TwikeyClient {
         return this;
     }
 
-    /**
-     * @param apikey API key
-     */
-    public TwikeyClient(String apikey) {
-        this(apikey, false);
+    public TwikeyClient withCustomEndpoint(String endpoint) {
+        this.endpoint = endpoint;
+        return this;
+    }
+
+    public TwikeyClient withTestEndpoint() {
+        this.endpoint = TEST_ENVIRONMENT;
+        return this;
     }
 
     protected String getSessionToken() throws IOException, UnauthenticatedException {
@@ -116,7 +118,6 @@ public class TwikeyClient {
                 throw new UnauthenticatedException();
             }
         }
-
         return sessionToken;
     }
 
@@ -176,7 +177,6 @@ public class TwikeyClient {
             super("Not authenticated");
         }
     }
-
 
     /**
      * @param signatureHeader request.getHeader("X-SIGNATURE")

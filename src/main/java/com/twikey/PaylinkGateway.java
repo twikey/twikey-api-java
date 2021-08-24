@@ -82,11 +82,6 @@ public class PaylinkGateway {
         int responseCode = con.getResponseCode();
         if (responseCode == 200) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
-                /* {
-                  "mndtId": "COREREC01",
-                  "url": "http://twikey.to/myComp/ToYG",
-                  "key": "ToYG"
-                } */
                 return new JSONObject(new JSONTokener(br));
             }
         } else {

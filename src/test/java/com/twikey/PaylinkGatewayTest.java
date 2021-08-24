@@ -37,25 +37,34 @@ public class PaylinkGatewayTest {
                 .setLang("nl")
                 .setMobile("32498665995");
 
-        api = new TwikeyClient(apiKey, true)
+        api = new TwikeyClient(apiKey)
+                .withTestEndpoint()
                 .withUserAgent("twikey-api-java/junit");
     }
 
     @Test
     public void testCreate() throws IOException, TwikeyClient.UserException {
-        Assume.assumeNotNull(apiKey, ct);
+        Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != null);
         Map<String, String> extra = new HashMap<>();
         extra.put("message", "Test Link");
         extra.put("amount", "10.00");
         JSONObject linkResponse = api.paylink().create(Long.parseLong(ct), customer, extra);
-        assertNotNull("Payment URL", linkResponse.getString("url"));
+        /*
+         * {
+         *   "id": 1,
+         *   "amount": 55.66,
+         *   "msg": "Test",
+         *   "url": "https://mycompany.twikey.com/payment/tr_l2iKz0LT8HvRrmf0"
+         * }
+         */
         assertNotEquals(0, linkResponse.getLong("id"));
+        assertNotNull("Payment URL", linkResponse.getString("url"));
 
     }
 
     @Test
     public void testFeed() throws IOException, TwikeyClient.UserException {
-        Assume.assumeNotNull(apiKey);
-        api.paylink().feed(updatedLink -> System.out.println("Updated link: " + updatedLink));
+        Assume.assumeTrue("APIKey is set", apiKey != null);
+        api.paylink().feed(updatedLink -> assertNotNull("Updated link", updatedLink));
     }
 }

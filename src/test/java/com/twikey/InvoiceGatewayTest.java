@@ -37,13 +37,14 @@ public class InvoiceGatewayTest {
                 .setLang("nl")
                 .setMobile("32498665995");
 
-        api = new TwikeyClient(apiKey, true)
+        api = new TwikeyClient(apiKey)
+                .withTestEndpoint()
                 .withUserAgent("twikey-api-java/junit");
     }
 
     @Test
     public void testCreateInvoice() throws IOException, TwikeyClient.UserException {
-        Assume.assumeNotNull(apiKey, ct);
+        Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != null);
         Map<String, String> invoiceDetails = new HashMap<>();
         invoiceDetails.put("number", "Invss123");
         invoiceDetails.put("title", "Invoice April");
@@ -56,11 +57,9 @@ public class InvoiceGatewayTest {
         assertNotNull("Invoice Id", invoiceResponse.getString("id"));
     }
 
-
     @Test
     public void getInvoicesAndDetails() throws IOException, TwikeyClient.UserException {
-        Assume.assumeNotNull(apiKey);
-        api.invoice().feed(updatedInvoice -> System.out.println("Updated invoice: " + updatedInvoice));
+        Assume.assumeTrue("APIKey is set", apiKey != null);
+        api.invoice().feed(updatedInvoice -> assertNotNull("Updated invoice", updatedInvoice));
     }
-
 }

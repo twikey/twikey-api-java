@@ -32,7 +32,7 @@ with [maven](https://maven.apache.org).
     <dependency>
       <groupId>com.twikey</groupId>
       <artifactId>twikey-api-java</artifactId>
-      <version>0.1.1</version>
+      <version>{twikey.version}</version>
     </dependency>
 
 ## How to create anything ##
