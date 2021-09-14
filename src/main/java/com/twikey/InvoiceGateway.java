@@ -2,10 +2,6 @@ package com.twikey;
 
 import com.twikey.callback.InvoiceCallback;
 import com.twikey.modal.Customer;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -13,7 +9,11 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 public class InvoiceGateway {
 
@@ -96,21 +96,32 @@ public class InvoiceGateway {
     }
 
     /**
-     * Get updates about all mandates (new/updated/cancelled)
+     * Get updates about all invoices and reset the feed to earlier point.
+     *
+     * @param callback Callback for every change
+     * @throws IOException                When a network issue happened
+     * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
+     */
+    public void feed(final InvoiceCallback callback, final LocalDateTime resetToDate) throws IOException, TwikeyClient.UserException {
+        HttpURLConnection con = getConnectionForFeed(resetToDate);
+        processOutput(con, callback);
+    }
+
+    /**
+     * Get updates about all invoices
      *
      * @param invoiceCallback Callback for every change
      * @throws IOException                When a network issue happened
      * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
      */
-    public void feed(InvoiceCallback invoiceCallback) throws IOException, TwikeyClient.UserException {
-        URL myurl = twikeyClient.getUrl("/invoice");
+    public void feed(final InvoiceCallback invoiceCallback) throws IOException, TwikeyClient.UserException {
+        HttpURLConnection con = getConnectionForFeed(null);
+        processOutput(con, invoiceCallback);
+    }
 
+    private void processOutput(final HttpURLConnection con, final InvoiceCallback callback) throws IOException, TwikeyClient.UserException {
         boolean isEmpty;
         do {
-            HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
-            con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            con.setRequestProperty("User-Agent", twikeyClient.getUserAgent());
-            con.setRequestProperty("Authorization", twikeyClient.getSessionToken());
 
             int responseCode = con.getResponseCode();
             if (responseCode == 200) {
@@ -122,7 +133,7 @@ public class InvoiceGateway {
                     if (!invoicesArr.isEmpty()) {
                         for (int i = 0; i < invoicesArr.length(); i++) {
                             JSONObject obj = invoicesArr.getJSONObject(i);
-                            invoiceCallback.invoice(obj);
+                            callback.invoice(obj);
                         }
                     }
                 }
@@ -131,5 +142,15 @@ public class InvoiceGateway {
                 throw new TwikeyClient.UserException(apiError);
             }
         } while (!isEmpty);
+    }
+
+    private HttpURLConnection getConnectionForFeed(final LocalDateTime resetToDate) throws IOException, TwikeyClient.UserException {
+        URL myurl = twikeyClient.getUrl("/invoice");
+        HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
+        con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        con.setRequestProperty("User-Agent", twikeyClient.getUserAgent());
+        con.setRequestProperty("Authorization", twikeyClient.getSessionToken());
+        if(resetToDate != null) con.setRequestProperty(TwikeyClient.X_RESET, TwikeyClient.formatResetAndSetToUTC(resetToDate));
+        return con;
     }
 }

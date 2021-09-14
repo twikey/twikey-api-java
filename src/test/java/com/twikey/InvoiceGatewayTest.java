@@ -1,6 +1,8 @@
 package com.twikey;
 
 import com.twikey.modal.Customer;
+import java.time.LocalDateTime;
+import java.util.TimeZone;
 import junit.framework.TestCase;
 import org.json.JSONObject;
 import org.junit.Assume;
@@ -61,5 +63,16 @@ public class InvoiceGatewayTest {
     public void getInvoicesAndDetails() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
         api.invoice().feed(updatedInvoice -> assertNotNull("Updated invoice", updatedInvoice));
+    }
+
+    @Test
+    public void testFeedWithReset() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey is set", apiKey != null);
+        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
+        LocalDateTime nowMinusThreeHours = LocalDateTime.now().minusHours(3);
+        api.invoice().feed(
+                updatedInvoice -> assertNotNull("Updated invoice", updatedInvoice),
+                nowMinusThreeHours
+        );
     }
 }
