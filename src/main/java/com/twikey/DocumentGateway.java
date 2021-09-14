@@ -1,7 +1,9 @@
 package com.twikey;
 
 import com.twikey.callback.DocumentCallback;
+import com.twikey.callback.InvoiceCallback;
 import com.twikey.modal.Customer;
+import java.time.LocalDateTime;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -100,20 +102,32 @@ public class DocumentGateway {
     }
 
     /**
+     * Get updates about all mandates (new/updated/cancelled) and reset feed
+     *
+     * @param callback Callback for every change
+     * @throws IOException                When a network issue happened
+     * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
+     */
+    public void feed(final DocumentCallback callback, final LocalDateTime resetToDate) throws IOException, TwikeyClient.UserException {
+        HttpURLConnection con = getConnectionForFeed(resetToDate);
+        processOutput(con, callback);
+    }
+
+    /**
      * Get updates about all mandates (new/updated/cancelled)
      *
      * @param mandateCallback Callback for every change
      * @throws IOException                When a network issue happened
      * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
      */
-    public void feed(DocumentCallback mandateCallback) throws IOException, TwikeyClient.UserException {
-        URL myurl = twikeyClient.getUrl("/mandate");
+    public void feed(final DocumentCallback mandateCallback) throws IOException, TwikeyClient.UserException {
+        HttpURLConnection con = getConnectionForFeed(null);
+        processOutput(con, mandateCallback);
+    }
+
+    private void processOutput(final HttpURLConnection con, final DocumentCallback callback) throws IOException, TwikeyClient.UserException {
         boolean isEmpty;
-        do{
-            HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
-            con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            con.setRequestProperty("User-Agent", twikeyClient.getUserAgent());
-            con.setRequestProperty("Authorization", twikeyClient.getSessionToken());
+        do {
 
             int responseCode = con.getResponseCode();
             if (responseCode == 200) {
@@ -126,11 +140,11 @@ public class DocumentGateway {
                         for (int i = 0; i < messagesArr.length(); i++) {
                             JSONObject obj = messagesArr.getJSONObject(i);
                             if (obj.has("CxlRsn")) {
-                                mandateCallback.cancelledDocument(obj);
+                                callback.cancelledDocument(obj);
                             } else if (obj.has("AmdmntRsn")) {
-                                mandateCallback.updatedDocument(obj);
+                                callback.updatedDocument(obj);
                             } else {
-                                mandateCallback.newDocument(obj);
+                                callback.newDocument(obj);
                             }
                         }
                     }
@@ -140,5 +154,15 @@ public class DocumentGateway {
                 throw new TwikeyClient.UserException(apiError);
             }
         } while (!isEmpty);
+    }
+
+    private HttpURLConnection getConnectionForFeed(final LocalDateTime resetToDate) throws IOException, TwikeyClient.UserException {
+        URL myurl = twikeyClient.getUrl("/mandate");
+        HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
+        con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        con.setRequestProperty("User-Agent", twikeyClient.getUserAgent());
+        con.setRequestProperty("Authorization", twikeyClient.getSessionToken());
+        if(resetToDate != null) con.setRequestProperty(TwikeyClient.X_RESET, TwikeyClient.formatResetAndSetToUTC(resetToDate));
+        return con;
     }
 }

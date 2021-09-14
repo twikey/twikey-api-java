@@ -1,5 +1,10 @@
 package com.twikey;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.TimeZone;
 import org.json.JSONObject;
 import org.junit.Assume;
 import org.junit.Before;
@@ -54,5 +59,16 @@ public class TransactionGatewayTest {
     public void testFeed() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
         api.transaction().feed(updatedTransaction -> assertNotNull("Updated transaction", updatedTransaction));
+    }
+
+    @Test
+    public void testFeedWithReset() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey is set", apiKey != null);
+        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
+        LocalDateTime nowMinusThreeHours = LocalDateTime.now().minusHours(3);
+        api.transaction().feed(
+                updatedTransaction -> assertNotNull("Updated transaction", updatedTransaction),
+                nowMinusThreeHours
+        );
     }
 }

@@ -2,6 +2,7 @@ package com.twikey;
 
 import com.twikey.callback.PaylinkCallback;
 import com.twikey.modal.Customer;
+import java.time.LocalDateTime;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -91,21 +92,32 @@ public class PaylinkGateway {
     }
 
     /**
+     * Get updates about all links and reset the feed to earlier point.
+     *
+     * @param callback Callback for every change
+     * @throws IOException                When a network issue happened
+     * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
+     */
+    public void feed(final PaylinkCallback callback, final LocalDateTime resetToDate) throws IOException, TwikeyClient.UserException {
+        HttpURLConnection con = getConnectionForFeed(resetToDate);
+        processOutput(con, callback);
+    }
+
+    /**
      * Get updates about all links
      *
      * @param callback Callback for every change
      * @throws IOException                When a network issue happened
      * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
      */
-    public void feed(PaylinkCallback callback) throws IOException, TwikeyClient.UserException {
-        URL myurl = twikeyClient.getUrl("/payment/link/feed");
+    public void feed(final PaylinkCallback callback) throws IOException, TwikeyClient.UserException {
+        HttpURLConnection con = getConnectionForFeed(null);
+        processOutput(con, callback);
+    }
+
+    private void processOutput(final HttpURLConnection con, final PaylinkCallback callback) throws IOException, TwikeyClient.UserException {
         boolean isEmpty;
         do {
-            HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
-            con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            con.setRequestProperty("User-Agent", twikeyClient.getUserAgent());
-            con.setRequestProperty("Authorization", twikeyClient.getSessionToken());
-
             int responseCode = con.getResponseCode();
             if (responseCode == 200) {
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
@@ -125,5 +137,15 @@ public class PaylinkGateway {
                 throw new TwikeyClient.UserException(apiError);
             }
         } while (!isEmpty);
+    }
+
+    private HttpURLConnection getConnectionForFeed(final LocalDateTime resetToDate) throws IOException, TwikeyClient.UserException {
+        URL myurl = twikeyClient.getUrl("/payment/link/feed");
+        HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
+        con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        con.setRequestProperty("User-Agent", twikeyClient.getUserAgent());
+        con.setRequestProperty("Authorization", twikeyClient.getSessionToken());
+        if(resetToDate != null) con.setRequestProperty(TwikeyClient.X_RESET, TwikeyClient.formatResetAndSetToUTC(resetToDate));
+        return con;
     }
 }

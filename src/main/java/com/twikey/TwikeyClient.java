@@ -1,5 +1,8 @@
 package com.twikey;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.spec.IvParameterSpec;
@@ -33,6 +36,8 @@ import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 public class TwikeyClient {
 
     private static final String UTF_8 = "UTF-8";
+
+    public static final String X_RESET = "X-RESET";
 
     private static final String DEFAULT_USER_HEADER = "twikey/java-v0.1.0";
     private static final String PROD_ENVIRONMENT = "https://api.twikey.com/creditor";
@@ -289,5 +294,10 @@ public class TwikeyClient {
                 (hash[offset + 3] & 0xff);
         // last 8 digits are important
         return v % 100000000;
+    }
+
+    public static String formatResetAndSetToUTC(final LocalDateTime resetToDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssX");
+        return formatter.format(resetToDate.atZone(ZoneId.of("UTC")));
     }
 }
