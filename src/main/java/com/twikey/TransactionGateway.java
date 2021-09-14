@@ -1,21 +1,20 @@
 package com.twikey;
 
-import com.twikey.callback.TransactionCallback;
-import java.time.LocalDateTime;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import static com.twikey.TwikeyClient.getPostDataString;
 
+import com.twikey.callback.TransactionCallback;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.twikey.TwikeyClient.getPostDataString;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 public class TransactionGateway {
 
