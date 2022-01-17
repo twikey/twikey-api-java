@@ -101,7 +101,7 @@ public class InvoiceGateway {
      * Get updates about all mandates (new/updated/cancelled)
      *
      * @param invoiceCallback Callback for every change
-     * @param sideloads items to include in the sideloading {@link <a href="https://www.twikey.com/api/#invoice-feed">www.twikey.com/api/#invoice-feed</a>}
+     * @param sideloads items to include in the sideloading @link <a href="https://www.twikey.com/api/#invoice-feed">www.twikey.com/api/#invoice-feed</a>
      * @throws IOException                When a network issue happened
      * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
      */
