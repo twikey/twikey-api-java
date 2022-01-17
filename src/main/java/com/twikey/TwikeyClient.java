@@ -4,7 +4,6 @@ import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -16,8 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.Map;
-
-import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 
 /**
  * Eg. usage or see unittests for more info
@@ -59,11 +56,11 @@ public class TwikeyClient {
      */
     public TwikeyClient(String apikey) {
         this.apiKey = apikey;
-        endpoint = PROD_ENVIRONMENT;
-        documentGateway = new DocumentGateway(this);
-        invoiceGateway = new InvoiceGateway(this);
-        transactionGateway = new TransactionGateway(this);
-        paylinkGateway = new PaylinkGateway(this);
+        this.endpoint = PROD_ENVIRONMENT;
+        this.documentGateway = new DocumentGateway(this);
+        this.invoiceGateway = new InvoiceGateway(this);
+        this.transactionGateway = new TransactionGateway(this);
+        this.paylinkGateway = new PaylinkGateway(this);
     }
 
     public TwikeyClient withUserAgent(String userAgent) {
@@ -192,13 +189,23 @@ public class TwikeyClient {
         }
     }
 
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
+    }
+
     /**
      * @param signatureHeader request.getHeader("X-SIGNATURE")
      * @param queryString     request.getQueryString()
      * @return true for valid signatures
      */
     public boolean verifyWebHookSignature(String signatureHeader, String queryString) {
-        byte[] providedSignature = DatatypeConverter.parseHexBinary(signatureHeader);
+        byte[] providedSignature = hexStringToByteArray(signatureHeader);
 
         Mac mac;
         try {
@@ -226,7 +233,7 @@ public class TwikeyClient {
      * @return whether or not the signature is valid
      */
     public static boolean verifyExiturlSignature(String websitekey, String document, String status, String token, String signature) {
-        byte[] providedSignature = DatatypeConverter.parseHexBinary(signature);
+        byte[] providedSignature = hexStringToByteArray(signature);
 
         Mac mac;
         try {
@@ -260,7 +267,7 @@ public class TwikeyClient {
             byte[] keyBytes = MessageDigest.getInstance("MD5").digest(key.getBytes(StandardCharsets.UTF_8));
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, "AES"), new IvParameterSpec(keyBytes));
-            byte[] val = cipher.doFinal(DatatypeConverter.parseHexBinary(encryptedAccount));
+            byte[] val = cipher.doFinal(hexStringToByteArray(encryptedAccount));
             return new String(val, StandardCharsets.UTF_8).split("/");
         } catch (Exception e) {
             throw new RuntimeException("Exception decrypting : " + encryptedAccount, e);
@@ -275,7 +282,7 @@ public class TwikeyClient {
             throw new IllegalArgumentException("Invalid key");
 
         long counter = (long) Math.floor(System.currentTimeMillis() / 30000);
-        byte[] key = parseHexBinary(privateKey);
+        byte[] key = hexStringToByteArray(privateKey);
 
         if (salt != null) {
             byte[] saltBytes = salt.getBytes(StandardCharsets.UTF_8);
