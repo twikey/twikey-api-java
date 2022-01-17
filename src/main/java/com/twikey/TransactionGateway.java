@@ -77,8 +77,8 @@ public class TransactionGateway {
      * @throws IOException                When a network issue happened
      * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
      */
-    public void feed(TransactionCallback callback) throws IOException, TwikeyClient.UserException {
-        URL myurl = twikeyClient.getUrl("/transaction");
+    public void feed(TransactionCallback callback,String... sideloads) throws IOException, TwikeyClient.UserException {
+        URL myurl = twikeyClient.getUrl("/transaction",sideloads);
         boolean isEmpty;
         do{
             HttpURLConnection con = (HttpURLConnection) myurl.openConnection();

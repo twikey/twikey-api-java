@@ -53,6 +53,6 @@ public class TransactionGatewayTest {
     @Test
     public void testFeed() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
-        api.transaction().feed(updatedTransaction -> assertNotNull("Updated transaction", updatedTransaction));
+        api.transaction().feed(updatedTransaction -> assertNotNull("Updated transaction", updatedTransaction),"link");
     }
 }

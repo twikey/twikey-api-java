@@ -94,11 +94,12 @@ public class PaylinkGateway {
      * Get updates about all links
      *
      * @param callback Callback for every change
+     * @param sideloads items to include in the sideloading {@link <a href="https://www.twikey.com/api/#paymentlink-feed">www.twikey.com/api/#paymentlink-feed</a>}
      * @throws IOException                When a network issue happened
      * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
      */
-    public void feed(PaylinkCallback callback) throws IOException, TwikeyClient.UserException {
-        URL myurl = twikeyClient.getUrl("/payment/link/feed");
+    public void feed(PaylinkCallback callback,String... sideloads) throws IOException, TwikeyClient.UserException {
+        URL myurl = twikeyClient.getUrl("/payment/link/feed",sideloads);
         boolean isEmpty;
         do {
             HttpURLConnection con = (HttpURLConnection) myurl.openConnection();

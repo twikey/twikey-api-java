@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Map;
 
 public class InvoiceGateway {
@@ -36,6 +37,7 @@ public class InvoiceGateway {
      *                       "date": "2020-01-31",
      *                       "duedate": "2020-02-28",
      *                       "status": "BOOKED",
+     *                       "manual": true,
      *                       "url": "https://yourpage.beta.twikey.com/invoice.html?fec44175-b4fe-414c-92aa-9d0a7dd0dbf2"
      *                   }</pre>
      * @throws IOException   When no connection could be made
@@ -99,12 +101,13 @@ public class InvoiceGateway {
      * Get updates about all mandates (new/updated/cancelled)
      *
      * @param invoiceCallback Callback for every change
+     * @param sideloads items to include in the sideloading {@link <a href="https://www.twikey.com/api/#invoice-feed">www.twikey.com/api/#invoice-feed</a>}
      * @throws IOException                When a network issue happened
      * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
      */
-    public void feed(InvoiceCallback invoiceCallback) throws IOException, TwikeyClient.UserException {
-        URL myurl = twikeyClient.getUrl("/invoice");
+    public void feed(InvoiceCallback invoiceCallback,String... sideloads) throws IOException, TwikeyClient.UserException {
 
+        URL myurl = twikeyClient.getUrl("/invoice",sideloads);
         boolean isEmpty;
         do {
             HttpURLConnection con = (HttpURLConnection) myurl.openConnection();

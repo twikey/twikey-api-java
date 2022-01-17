@@ -60,6 +60,7 @@ public class InvoiceGatewayTest {
     @Test
     public void getInvoicesAndDetails() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
+        api.invoice().feed(updatedInvoice -> assertNotNull("Updated invoice", updatedInvoice),"meta");
         api.invoice().feed(updatedInvoice -> assertNotNull("Updated invoice", updatedInvoice));
     }
 }

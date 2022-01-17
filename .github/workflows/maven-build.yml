@@ -4,12 +4,10 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        java-version: [ 11, 15 ]
+        java-version: [ 11 ]
 
     permissions:
       contents: read

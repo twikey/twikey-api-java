@@ -146,6 +146,20 @@ public class TwikeyClient {
         return new URL(String.format("%s%s", endpoint, path));
     }
 
+    public URL getUrl(String path,String... sideloads) throws MalformedURLException {
+        if (sideloads != null && sideloads.length != 0) {
+            StringBuilder sb = new StringBuilder(endpoint).append(path);
+            sb.append('?');
+            for (String sideload : sideloads) {
+                sb.append("include=").append(sideload).append('&');
+            }
+            return new URL(sb.substring(0, sb.length() - 1));
+        }
+        else {
+            return new URL(String.format("%s%s", endpoint, path));
+        }
+    }
+
     public String getUserAgent() {
         return userAgent;
     }

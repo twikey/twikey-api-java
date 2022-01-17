@@ -4,14 +4,11 @@
 name: Maven Release
 
 on:
-  release:
-    types: [created]
-
+  tags:
+    - '*'
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         java-version: [  11 ]

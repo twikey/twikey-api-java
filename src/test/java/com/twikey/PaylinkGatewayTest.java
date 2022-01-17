@@ -65,6 +65,7 @@ public class PaylinkGatewayTest {
     @Test
     public void testFeed() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
+        api.paylink().feed(updatedLink -> assertNotNull("Updated link", updatedLink),"meta");
         api.paylink().feed(updatedLink -> assertNotNull("Updated link", updatedLink));
     }
 }
