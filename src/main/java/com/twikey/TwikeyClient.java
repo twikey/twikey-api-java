@@ -6,30 +6,28 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Eg. usage or see unittests for more info
  *
  * <pre>
- * String apiKey = "87DA7055C5D18DC5F3FC084F9F208AB335340977"; // found in https://www.twikey.com/r/admin#/c/settings/api
- * long ct = 1420; // found @ https://www.twikey.com/r/admin#/c/template
+ * String apiKey = "87DA7055C5D18DC5F3FC084F9F208AB335340977"; // found in <a href="https://www.twikey.com/r/admin#/c/settings/api">https://www.twikey.com/r/admin#/c/settings/api</a>
+ * long ct = 1420; // found @ <a href="https://www.twikey.com/r/admin#/c/template">https://www.twikey.com/r/admin#/c/template</a>
  * TwikeyAPI api = new TwikeyAPI(apiKey);
  * System.out.println(api.invoice().create(ct,customer,invoiceDetails));
  * System.out.println(api.document().create(ct,null,Map.of()));
  * </pre>
  */
 public class TwikeyClient {
-
-    private static final String UTF_8 = "UTF-8";
 
     private static final String DEFAULT_USER_HEADER = "twikey/java-v0.1.0";
     private static final String PROD_ENVIRONMENT = "https://api.twikey.com/creditor";
@@ -50,6 +48,7 @@ public class TwikeyClient {
     private final InvoiceGateway invoiceGateway;
     private final TransactionGateway transactionGateway;
     private final PaylinkGateway paylinkGateway;
+    private final RefundGateway refundGateway;
 
     /**
      * @param apikey API key
@@ -61,6 +60,7 @@ public class TwikeyClient {
         this.invoiceGateway = new InvoiceGateway(this);
         this.transactionGateway = new TransactionGateway(this);
         this.paylinkGateway = new PaylinkGateway(this);
+        this.refundGateway = new RefundGateway(this);
     }
 
     public TwikeyClient withUserAgent(String userAgent) {
@@ -119,24 +119,19 @@ public class TwikeyClient {
     }
 
     protected static String getPostDataString(Map<String, String> params) {
-        try {
-            StringBuilder result = new StringBuilder();
-            boolean first = true;
-            for (Map.Entry<String, String> entry : params.entrySet()) {
-                if (first)
-                    first = false;
-                else
-                    result.append("&");
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (first)
+                first = false;
+            else
+                result.append("&");
 
-                result.append(URLEncoder.encode(entry.getKey(), UTF_8));
-                result.append("=");
-                result.append(URLEncoder.encode(entry.getValue(), UTF_8));
-            }
-            return result.toString();
-        } catch (UnsupportedEncodingException e) {
-            // should not happen on UTF8
-            throw new RuntimeException(e);
+            result.append(URLEncoder.encode(entry.getKey(), UTF_8));
+            result.append("=");
+            result.append(URLEncoder.encode(entry.getValue(), UTF_8));
         }
+        return result.toString();
     }
 
     public URL getUrl(String path) throws MalformedURLException {
@@ -177,6 +172,10 @@ public class TwikeyClient {
         return paylinkGateway;
     }
 
+    public RefundGateway refund() {
+        return refundGateway;
+    }
+
     public static class UserException extends Throwable {
         public UserException(String apiError) {
             super(apiError);
@@ -210,9 +209,9 @@ public class TwikeyClient {
         Mac mac;
         try {
             mac = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secret = new SecretKeySpec(apiKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            SecretKeySpec secret = new SecretKeySpec(apiKey.getBytes(UTF_8), "HmacSHA256");
             mac.init(secret);
-            byte[] calculated = mac.doFinal(queryString.getBytes(StandardCharsets.UTF_8));
+            byte[] calculated = mac.doFinal(queryString.getBytes(UTF_8));
             boolean equal = true;
             for (int i = 0; i < calculated.length; i++) {
                 equal = equal && (providedSignature[i] == calculated[i]);
@@ -238,13 +237,13 @@ public class TwikeyClient {
         Mac mac;
         try {
             mac = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secret = new SecretKeySpec(websitekey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            SecretKeySpec secret = new SecretKeySpec(websitekey.getBytes(UTF_8), "HmacSHA256");
             mac.init(secret);
             String payload = document + "/" + status;
             if (token != null) {
                 payload += "/" + token;
             }
-            byte[] calculated = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            byte[] calculated = mac.doFinal(payload.getBytes(UTF_8));
             boolean equal = true;
             for (int i = 0; i < calculated.length; i++) {
                 equal = equal && (providedSignature[i] == calculated[i]);
@@ -264,11 +263,11 @@ public class TwikeyClient {
     public static String[] decryptAccountInformation(String websitekey, String document, String encryptedAccount) {
         String key = document + websitekey;
         try {
-            byte[] keyBytes = MessageDigest.getInstance("MD5").digest(key.getBytes(StandardCharsets.UTF_8));
+            byte[] keyBytes = MessageDigest.getInstance("MD5").digest(key.getBytes(UTF_8));
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, "AES"), new IvParameterSpec(keyBytes));
             byte[] val = cipher.doFinal(hexStringToByteArray(encryptedAccount));
-            return new String(val, StandardCharsets.UTF_8).split("/");
+            return new String(val, UTF_8).split("/");
         } catch (Exception e) {
             throw new RuntimeException("Exception decrypting : " + encryptedAccount, e);
         }
@@ -285,7 +284,7 @@ public class TwikeyClient {
         byte[] key = hexStringToByteArray(privateKey);
 
         if (salt != null) {
-            byte[] saltBytes = salt.getBytes(StandardCharsets.UTF_8);
+            byte[] saltBytes = salt.getBytes(UTF_8);
             byte[] key2 = new byte[saltBytes.length + key.length];
             System.arraycopy(saltBytes, 0, key2, 0, saltBytes.length);
             System.arraycopy(key, 0, key2, saltBytes.length, key.length);

@@ -1,5 +1,8 @@
 package com.twikey.modal;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Customer {
 
     private String lastname;
@@ -123,5 +126,24 @@ public class Customer {
 
     public String getCoc() {
         return coc;
+    }
+
+    public Map<String,String> asFormParameters(){
+        Map<String,String> params = new HashMap<>();
+        params.put("customerNumber", getNumber());
+        params.put("email", getEmail());
+        params.put("firstname", getFirstname());
+        params.put("lastname", getLastname());
+        params.put("l", getLang());
+        params.put("address", getStreet());
+        params.put("city", getCity());
+        params.put("zip", getZip());
+        params.put("country", getCountry());
+        params.put("mobile", getMobile());
+        if(getCompanyName() != null){
+            params.put("companyName", getCompanyName());
+            params.put("coc", getCoc());
+        }
+        return params;
     }
 }

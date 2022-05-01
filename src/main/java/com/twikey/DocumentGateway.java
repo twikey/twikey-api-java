@@ -42,7 +42,7 @@ public class DocumentGateway {
      * <li>requireValidation	Always start with the registration page, even with all known mandate details	No	boolean</li>
      * </ul>
      *
-     * @param ct             Template to use can be found @ https://www.twikey.com/r/admin#/c/template
+     * @param ct             Template to use can be found @ <a href="https://www.twikey.com/r/admin#/c/template">https://www.twikey.com/r/admin#/c/template</a>
      * @param customer       Customer details
      * @param mandateDetails Map containing any of the parameters in the above table
      * @throws IOException   When no connection could be made
@@ -53,20 +53,7 @@ public class DocumentGateway {
         Map<String, String> params = new HashMap<>(mandateDetails);
         params.put("ct", String.valueOf(ct));
         if (customer != null) {
-            params.put("customerNumber", customer.getNumber());
-            params.put("email", customer.getEmail());
-            params.put("firstname", customer.getFirstname());
-            params.put("lastname", customer.getLastname());
-            params.put("l", customer.getLang());
-            params.put("address", customer.getStreet());
-            params.put("city", customer.getCity());
-            params.put("zip", customer.getZip());
-            params.put("country", customer.getCountry());
-            params.put("mobile", customer.getMobile());
-            if(customer.getCompanyName() != null){
-                params.put("companyName", customer.getCompanyName());
-                params.put("coc", customer.getCoc());
-            }
+            params.putAll(customer.asFormParameters());
         }
 
         URL myurl = twikeyClient.getUrl("/invite");
