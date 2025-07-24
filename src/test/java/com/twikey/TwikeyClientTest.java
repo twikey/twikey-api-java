@@ -2,8 +2,10 @@ package com.twikey;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 public class TwikeyClientTest {
 
@@ -26,6 +28,26 @@ public class TwikeyClientTest {
         String[] ibanAndBic = TwikeyClient.decryptAccountInformation(websiteKey, doc, encryptedAccountInOutcome);
         assertEquals("BE08001166979213",ibanAndBic[0]);
         assertEquals("GEBABEBB",ibanAndBic[1]);
+    }
+
+    @Test
+    public void test_getPostDataString_skipEmptyValues() {
+        // map with null keys
+        Map<String, String> params = new HashMap<>();
+        params.put("testing", null);
+        params.put("has", "value");
+
+        String data = TwikeyClient.getPostDataString(params);
+        assertEquals("has=value", data);
+    }
+
+    @Test
+    public void test_getPostDataString_urlEncoding() {
+        Map<String, String> params = new HashMap<>();
+        params.put("safe", "hello world");
+
+        String data = TwikeyClient.getPostDataString(params);
+        assertEquals("safe=hello+world", data);
     }
 
 }
