@@ -122,6 +122,11 @@ public class TwikeyClient {
         StringBuilder result = new StringBuilder();
         boolean first = true;
         for (Map.Entry<String, String> entry : params.entrySet()) {
+            String value = entry.getValue();
+            if (value == null || value.isBlank()) {
+                continue;
+            }
+
             if (first)
                 first = false;
             else
