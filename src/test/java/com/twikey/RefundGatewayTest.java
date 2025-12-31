@@ -14,6 +14,7 @@ import static org.junit.Assert.*;
 public class RefundGatewayTest {
 
     private final String apiKey = System.getenv("TWIKEY_API_KEY"); // found in https://www.twikey.com/r/admin#/c/settings/api
+    private final String iban = System.getenv("REFUND_IBAN"); // found in https://www.twikey.com/r/admin#/c/settings/api
 
     private final String ct = System.getenv("CT");
 
@@ -37,8 +38,8 @@ public class RefundGatewayTest {
                 .setLang("nl")
                 .setMobile("32498665995");
 
-        account = new DocumentRequests.Account("NL46ABNA8910219718", "ABNANL2A");
-
+        Assume.assumeTrue("IBAN is set", iban != null);
+        account = new DocumentRequests.Account(iban, "ABNANL2A");
         api = new TwikeyClient(apiKey)
                 .withTestEndpoint()
                 .withUserAgent("twikey-api-java/junit");

@@ -134,22 +134,20 @@ public interface DocumentResponse {
             JSONObject ctct = dbtr.getJSONObject("CtctDtls");
 
             resp.debtorName = dbtr.getString("Nm");
-            resp.debtorStreet = addr.getString("AdrLine");
-            resp.debtorCity = addr.getString("TwnNm");
-            resp.debtorZip = addr.getString("PstCd");
-            resp.debtorCountry = addr.getString("Ctry");
-            if (dbtr.has("Id")) {
-                resp.btwNummer = dbtr.getString("Id");
-            }
-            resp.countryOfResidence = dbtr.getString("CtryOfRes");
+            resp.debtorStreet = addr.optString("AdrLine");
+            resp.debtorCity = addr.optString("TwnNm");
+            resp.debtorZip = addr.optString("PstCd");
+            resp.debtorCountry = addr.optString("Ctry");
+            resp.btwNummer = dbtr.optString("Id");
+            resp.countryOfResidence = dbtr.optString("CtryOfRes");
             resp.debtorEmail = ctct.optString("EmailAdr");
             resp.customerNumber = ctct.optString("Othr");
 
-            resp.iban = mndt.getString("DbtrAcct");
+            resp.iban = mndt.optString("DbtrAcct");
 
             JSONObject agent = mndt.getJSONObject("DbtrAgt").getJSONObject("FinInstnId");
-            resp.bic = agent.getString("BICFI");
-            resp.debtorBank = agent.getString("Nm");
+            resp.bic = agent.optString("BICFI");
+            resp.debtorBank = agent.optString("Nm");
 
             resp.contractNumber = mndt.getString("RfrdDoc");
 
@@ -162,7 +160,6 @@ public interface DocumentResponse {
                     resp.supplementaryData.put(key, value);
                 }
             }
-
             return resp;
         }
 

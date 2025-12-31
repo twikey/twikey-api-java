@@ -17,6 +17,7 @@ public class DocumentGatewayTest {
     private final String apiKey = System.getenv("TWIKEY_API_KEY"); // found in https://www.twikey.com/r/admin#/c/settings/api
 
     private final String _ct = System.getenv("CT"); // found @ https://www.twikey.com/r/admin#/c/template
+    private final String mndtNumber = System.getenv("MNDTNUMBER");
 
     private Long ct;
 
@@ -84,9 +85,9 @@ public class DocumentGatewayTest {
     }
 
     @Test
-    public void testAction() throws IOException, TwikeyClient.UserException, InterruptedException {
+    public void testAction() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
-        MandateActionRequest action = new MandateActionRequest(MandateActionRequest.MandateActionType.REMINDER, "CORERECURRENTNL18166")
+        MandateActionRequest action = new MandateActionRequest(MandateActionRequest.MandateActionType.REMINDER, mndtNumber)
                 .setReminder(1);
         api.document().action(action);
     }
@@ -116,29 +117,39 @@ public class DocumentGatewayTest {
     @Test
     public void testFetch() throws Exception, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
-        MandateDetailRequest fetch = new MandateDetailRequest("CORERECURRENTNL18166")
+        MandateDetailRequest fetch = new MandateDetailRequest(mndtNumber)
                 .setForce(true);
         DocumentResponse.Document response = api.document().fetch(fetch);
         assertNotNull("Document Reference", response.getMandateNumber());
     }
 
     @Test
-    public void testUpdateMandate() throws IOException, TwikeyClient.UserException, InterruptedException {
+    public void testUpdateMandate() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
-        UpdateMandateRequest update = new UpdateMandateRequest("CORERECURRENTNL18166", customer, account);
+        UpdateMandateRequest update = new UpdateMandateRequest(mndtNumber, customer, account);
         api.document().update(update);
     }
 
     @Test
-    public void testCustomerAccess() throws IOException, TwikeyClient.UserException, InterruptedException {
+    public void testCustomerAccess() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
-        DocumentResponse.CustomerAccessResponse response = api.document().customerAccess("CORERECURRENTNL18166");
+        DocumentResponse.CustomerAccessResponse response = api.document().customerAccess(mndtNumber);
         assertNotNull("Document Customer Url", response.getUrl());
     }
 
     @Test
-    public void testRetrievePdf() throws IOException, TwikeyClient.UserException, InterruptedException {
-        Assume.assumeTrue("APIKey is set", apiKey != null);
+    public void testRetrievePdf() throws Exception, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != 0);
+        InviteRequest inviteRequest = new InviteRequest(ct, customer, account)
+                .setForceCheck(true)
+                .setReminderDays(5);
+        SignRequest invite = new SignRequest(inviteRequest, SignRequest.SignMethod.PAPER);
+        DocumentResponse.MandateCreationResponse response = api.document().sign(invite);
+
+        assertNotNull("Document Reference", response.getMandateNumber());
+        UploadPdfRequest pdfRequest = new UploadPdfRequest(response.getMandateNumber(), "target/test-classes/empty.pdf");
+        api.document().uploadPdf(pdfRequest);
+
         DocumentResponse.PdfResponse retrievedPdf = api.document().retrievePdf("CORERECURRENTNL18247");
         retrievedPdf.save("target/pdf.pdf");
         assertNotNull("Document Reference", retrievedPdf.getFilename());
@@ -147,15 +158,6 @@ public class DocumentGatewayTest {
 
     @Test
     public void testUploadPdf() throws Exception, TwikeyClient.UserException {
-        Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != 0);
-        InviteRequest inviteRequest = new InviteRequest(ct, customer, account)
-                .setForceCheck(true)
-                .setReminderDays(5);
-        SignRequest invite = new SignRequest(inviteRequest, SignRequest.SignMethod.PAPER);
-        DocumentResponse.MandateCreationResponse response = api.document().sign(invite);
-        assertNotNull("Document Reference", response.getMandateNumber());
-        UploadPdfRequest pdfRequest = new UploadPdfRequest(response.getMandateNumber(), "target/test-classes/empty.pdf");
-        api.document().uploadPdf(pdfRequest);
     }
 
     @Test

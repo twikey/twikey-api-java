@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java-version: [ 11 ]
+        java-version: [ 17 ]
 
     permissions:
       contents: read
@@ -22,7 +22,7 @@ jobs:
         java-version: ${{ matrix.java-version }}
 
     - name: Cache Maven packages
-      uses: actions/cache@v1
+      uses: actions/cache@v4
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
