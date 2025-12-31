@@ -1,7 +1,7 @@
 package com.twikey.callback;
 
-import org.json.JSONObject;
+import com.twikey.modal.InvoiceResponse;
 
 public interface InvoiceCallback {
-    void invoice(JSONObject updatedInvoice);
+    void invoice(InvoiceResponse.Invoice updatedInvoice);
 }

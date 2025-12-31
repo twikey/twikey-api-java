@@ -1,20 +1,21 @@
 package com.twikey;
 
 import com.twikey.callback.PaylinkCallback;
-import com.twikey.modal.Customer;
+import com.twikey.modal.DocumentRequests;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.twikey.TwikeyClient.HTTP_FORM_ENCODED;
 import static com.twikey.TwikeyClient.getPostDataString;
 
 public class PaylinkGateway {
@@ -38,18 +39,18 @@ public class PaylinkGateway {
      * <li>invoice	create payment link for specific invoice number	No	string</li>
      * </ul>
      *
-     * @param ct          Template to use can be found @ https://www.twikey.com/r/admin#/c/template
+     * @param ct          <a href="https://www.twikey.com/r/admin#/c/template">Template to use can be found</a>
      * @param customer    Customer details
      * @param linkDetails Map containing any of the parameters in the above table
      * @return Url to redirect the customer to or to send in an email
      * @throws IOException   When no connection could be made
-     * @throws com.twikey.TwikeyClient.UserException When Twikey returns a user error (400)
+     * @throws TwikeyClient.UserException When Twikey returns a user error (400)
      */
-    public JSONObject create(long ct, Customer customer, Map<String, String> linkDetails) throws IOException, TwikeyClient.UserException {
+    public JSONObject create(long ct, DocumentRequests.Customer customer, Map<String, String> linkDetails) throws IOException, TwikeyClient.UserException {
         Map<String, String> params = new HashMap<>(linkDetails);
         params.put("ct", String.valueOf(ct));
         if (customer != null) {
-            params.put("customerNumber", customer.getNumber());
+            params.put("customerNumber", customer.getCustomerNumber());
             params.put("email", customer.getEmail());
             params.put("firstname", customer.getFirstname());
             params.put("lastname", customer.getLastname());
@@ -65,27 +66,23 @@ public class PaylinkGateway {
             }
         }
 
-        URL myurl = twikeyClient.getUrl("/payment/link");
-        HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
-        con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        con.setRequestProperty("User-Agent", twikeyClient.getUserAgent());
-        con.setRequestProperty("Authorization", twikeyClient.getSessionToken());
-        con.setDoOutput(true);
-        con.setDoInput(true);
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/payment/link"))
+                .header("Content-Type", HTTP_FORM_ENCODED)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .POST(HttpRequest.BodyPublishers.ofString(getPostDataString(params)))
+                .build();
 
-        try (DataOutputStream output = new DataOutputStream(con.getOutputStream())) {
-            output.writeBytes(getPostDataString(params));
-            output.flush();
-        }
-
-        int responseCode = con.getResponseCode();
+        HttpResponse<InputStream> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        int responseCode = response.statusCode();
         if (responseCode == 200) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(response.body()))) {
                 return new JSONObject(new JSONTokener(br));
             }
         } else {
-            String apiError = con.getHeaderField("ApiError");
+            String apiError = response.headers()
+                    .firstValue("ApiError")
+                    .orElse(null);
             throw new TwikeyClient.UserException(apiError);
         }
     }
@@ -99,17 +96,20 @@ public class PaylinkGateway {
      * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
      */
     public void feed(PaylinkCallback callback,String... sideloads) throws IOException, TwikeyClient.UserException {
-        URL myurl = twikeyClient.getUrl("/payment/link/feed",sideloads);
+
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/payment/link/feed", sideloads))
+                .header("Content-Type", HTTP_FORM_ENCODED)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .build();
+
         boolean isEmpty;
         do {
-            HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
-            con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            con.setRequestProperty("User-Agent", twikeyClient.getUserAgent());
-            con.setRequestProperty("Authorization", twikeyClient.getSessionToken());
+            HttpResponse<InputStream> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
-            int responseCode = con.getResponseCode();
+            int responseCode = response.statusCode();
             if (responseCode == 200) {
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.body()))) {
                     JSONObject json = new JSONObject(new JSONTokener(br));
 
                     JSONArray messagesArr = json.getJSONArray("Links");
@@ -122,7 +122,9 @@ public class PaylinkGateway {
                     }
                 }
             } else {
-                String apiError = con.getHeaderField("ApiError");
+                String apiError = response.headers()
+                        .firstValue("ApiError")
+                        .orElse(null);
                 throw new TwikeyClient.UserException(apiError);
             }
         } while (!isEmpty);

@@ -1,21 +1,20 @@
 package com.twikey;
 
 import com.twikey.callback.RefundCallback;
-import com.twikey.modal.Account;
-import com.twikey.modal.Customer;
+import com.twikey.modal.RefundRequests;
+import com.twikey.modal.RefundResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.HashMap;
+import java.io.InputStream;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Map;
 
+import static com.twikey.TwikeyClient.HTTP_FORM_ENCODED;
 import static com.twikey.TwikeyClient.getPostDataString;
 public class RefundGateway {
 
@@ -27,8 +26,7 @@ public class RefundGateway {
 
     /**
      * Creation of a refund provided the customer was created and has a customerNumber
-     * @param customerNumber required
-     * @param transactionDetails required
+     * @param refundRequest required
      * <ul>
      * <li>customerNumber	The customer number</li>
      * <li>iban	Iban of the beneficiary</li>
@@ -51,39 +49,126 @@ public class RefundGateway {
      * @throws IOException   When no connection could be made
      * @throws com.twikey.TwikeyClient.UserException When Twikey returns a user error (400)
      */
-    public JSONObject create(String customerNumber, Map<String, String> transactionDetails) throws IOException, TwikeyClient.UserException {
-        Map<String, String> params = new HashMap<>(transactionDetails);
-        params.put("customerNumber", customerNumber);
+    public RefundResponse.Refund create(RefundRequests.NewCreditTransferRequest refundRequest) throws IOException, TwikeyClient.UserException {
+        Map<String, String> params = refundRequest.toRequestMap();
 
-        URL myurl = twikeyClient.getUrl("/transfer");
-        HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
-        con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        con.setRequestProperty("User-Agent", twikeyClient.getUserAgent());
-        con.setRequestProperty("Authorization", twikeyClient.getSessionToken());
-        con.setDoOutput(true);
-        con.setDoInput(true);
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/transfer"))
+                .header("Content-Type", HTTP_FORM_ENCODED)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .POST(HttpRequest.BodyPublishers.ofString(getPostDataString(params)))
+                .build();
+        HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-        try (DataOutputStream output = new DataOutputStream(con.getOutputStream())) {
-            output.writeBytes(getPostDataString(params));
-            output.flush();
-        }
 
-        int responseCode = con.getResponseCode();
+        int responseCode = response.statusCode();
         if (responseCode == 200) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
-                return new JSONObject(new JSONTokener(br)).getJSONArray("Entries").optJSONObject(0);
-            }
+            JSONObject json = new JSONObject(new JSONTokener(response.body()));
+            return RefundResponse.Refund.fromJson(json.getJSONArray("Entries").getJSONObject(0));
         } else {
-            String apiError = con.getHeaderField("ApiError");
+            String apiError = response.headers()
+                    .firstValue("ApiError")
+                    .orElse("Twikey status=" + response.statusCode());
+            throw new TwikeyClient.UserException(apiError);
+        }
+    }
+
+    /**
+     * TODO
+     */
+    public RefundResponse.Refund details(String id) throws IOException, TwikeyClient.UserException {
+
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/transfer/detail?%s".formatted(id)))
+                .header("Content-Type", HTTP_FORM_ENCODED)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .GET()
+                .build();
+        HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            JSONObject json = new JSONObject(new JSONTokener(response.body()));
+            return RefundResponse.Refund.fromJson(json);
+        } else {
+            String apiError = response.headers()
+                    .firstValue("ApiError")
+                    .orElse("Twikey status=" + response.statusCode());
+            throw new TwikeyClient.UserException(apiError);
+        }
+    }
+
+    /**
+     * TODO
+     */
+    public void remove(String id) throws IOException, TwikeyClient.UserException {
+
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/transfer?%s".formatted(id)))
+                .header("Content-Type", HTTP_FORM_ENCODED)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .DELETE()
+                .build();
+        HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 204) {
+            String apiError = response.headers()
+                    .firstValue("ApiError")
+                    .orElse("Twikey status=" + response.statusCode());
+            throw new TwikeyClient.UserException(apiError);
+        }
+    }
+
+    /**
+     * TODO
+     */
+    public RefundResponse.CreditTransferResponse createBatch(RefundRequests.CompleteCreditTransferRequest createBatchRequest) throws IOException, TwikeyClient.UserException {
+        Map<String, String> params = createBatchRequest.toRequest();
+
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/transfer/complete"))
+                .header("Content-Type", HTTP_FORM_ENCODED)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .POST(HttpRequest.BodyPublishers.ofString(getPostDataString(params)))
+                .build();
+        HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 200) {
+            JSONObject json = new JSONObject(new JSONTokener(response.body()));
+            return RefundResponse.CreditTransferResponse.fromJson(json.getJSONArray("CreditTransfers").getJSONObject(0));
+        } else {
+            String apiError = response.headers()
+                    .firstValue("ApiError")
+                    .orElse("Twikey status=" + response.statusCode());
+            throw new TwikeyClient.UserException(apiError);
+        }
+    }
+
+    /**
+     * TODO
+     */
+    public RefundResponse.CreditTransferResponse batchDetails(RefundRequests.CompleteCreditTransferDetailsRequest BatchRequest) throws IOException, TwikeyClient.UserException {
+        Map<String, String> params = BatchRequest.toRequest();
+
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/transfer/complete?%s".formatted(getPostDataString(params))))
+                .header("Content-Type", HTTP_FORM_ENCODED)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .GET()
+                .build();
+        HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            JSONObject json = new JSONObject(new JSONTokener(response.body()));
+            return RefundResponse.CreditTransferResponse.fromJson(json.getJSONArray("CreditTransfers").getJSONObject(0));
+        } else {
+            String apiError = response.headers()
+                    .firstValue("ApiError")
+                    .orElse("Twikey status=" + response.statusCode());
             throw new TwikeyClient.UserException(apiError);
         }
     }
 
     /**
      * Creation a beneficiary account (with accompanied customer)
-     * @param customer required
-     * @param account required
+     * @param beneficiary required
 
      * @return json object containing <pre>{
      *     "name": "Beneficiary Name",
@@ -100,35 +185,74 @@ public class RefundGateway {
      * @throws IOException   When no connection could be made
      * @throws com.twikey.TwikeyClient.UserException When Twikey returns a user error (400)
      */
-    public JSONObject createBeneficiaryAccount(Customer customer, Account account) throws IOException, TwikeyClient.UserException {
-        Map<String, String> params = new HashMap<>(customer.asFormParameters());
-        params.put("iban",account.getIban());
-        params.put("bic",account.getBic());
+    public RefundResponse.AddBeneficiaryResponse createBeneficiaryAccount(RefundRequests.AddBeneficiaryRequest beneficiary) throws IOException, TwikeyClient.UserException {
+        Map<String, String> params = beneficiary.toRequestMap();
 
-        URL myurl = twikeyClient.getUrl("/transfers/beneficiaries");
-        HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
-        con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        con.setRequestProperty("User-Agent", twikeyClient.getUserAgent());
-        con.setRequestProperty("Authorization", twikeyClient.getSessionToken());
-        con.setDoOutput(true);
-        con.setDoInput(true);
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/transfers/beneficiaries"))
+                .header("Content-Type", HTTP_FORM_ENCODED)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .POST(HttpRequest.BodyPublishers.ofString(getPostDataString(params)))
+                .build();
 
-        try (DataOutputStream output = new DataOutputStream(con.getOutputStream())) {
-            output.writeBytes(getPostDataString(params));
-            output.flush();
-        }
-
-        int responseCode = con.getResponseCode();
-        if (responseCode == 200) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
-                return new JSONObject(new JSONTokener(br));
-            }
+        HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 200) {
+            JSONObject json = new JSONObject(new JSONTokener(response.body()));
+            return RefundResponse.AddBeneficiaryResponse.fromJson(json);
         } else {
-            String apiError = con.getHeaderField("ApiError");
+            String apiError = response.headers()
+                    .firstValue("ApiError")
+                    .orElse("Twikey status=" + response.statusCode());
             throw new TwikeyClient.UserException(apiError);
         }
     }
+
+    /**
+     * TODO
+     */
+    public List<RefundResponse.AddBeneficiaryResponse> getBeneficiaries(Boolean withAddress) throws IOException, TwikeyClient.UserException {
+
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/transfer/beneficiaries?withAddress=%s".formatted(withAddress)))
+                .header("Content-Type", HTTP_FORM_ENCODED)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .GET()
+                .build();
+        HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            JSONObject json = new JSONObject(new JSONTokener(response.body()));
+            return RefundResponse.AddBeneficiaryResponse.fromQuery(json);
+        } else {
+            String apiError = response.headers()
+                    .firstValue("ApiError")
+                    .orElse("Twikey status=" + response.statusCode());
+            throw new TwikeyClient.UserException(apiError);
+        }
+    }
+
+    /**
+     * TODO
+     */
+    public void disableBeneficiary(RefundRequests.DisableBeneficiaryRequest beneficiaryRequest) throws IOException, TwikeyClient.UserException {
+        Map<String, String> params = beneficiaryRequest.toRequest();
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/transfer/beneficiaries?%s".formatted(getPostDataString(params))))
+                .header("Content-Type", HTTP_FORM_ENCODED)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .DELETE()
+                .build();
+        HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 204) {
+            String apiError = response.headers()
+                    .firstValue("ApiError")
+                    .orElse("Twikey status=" + response.statusCode());
+            throw new TwikeyClient.UserException(apiError);
+        }
+    }
+
+
 
     /**
      * Get updates about all paid refunds
@@ -139,30 +263,31 @@ public class RefundGateway {
      * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
      */
     public void feed(RefundCallback callback, String... sideloads) throws IOException, TwikeyClient.UserException {
-        URL myurl = twikeyClient.getUrl("/transfer",sideloads);
+
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/transfer", sideloads))
+                .header("Content-Type", HTTP_FORM_ENCODED)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .build();
         boolean isEmpty;
         do{
-            HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
-            con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            con.setRequestProperty("User-Agent", twikeyClient.getUserAgent());
-            con.setRequestProperty("Authorization", twikeyClient.getSessionToken());
-
-            int responseCode = con.getResponseCode();
+            HttpResponse<InputStream> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            int responseCode = response.statusCode();
             if (responseCode == 200) {
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
-                    JSONObject json = new JSONObject(new JSONTokener(br));
+                JSONObject json = new JSONObject(new JSONTokener(response.body()));
 
-                    JSONArray messagesArr = json.getJSONArray("Entries");
-                    isEmpty = messagesArr.isEmpty();
-                    if (!isEmpty) {
-                        for (int i = 0; i < messagesArr.length(); i++) {
-                            JSONObject obj = messagesArr.getJSONObject(i);
-                            callback.refund(obj);
-                        }
+                JSONArray messagesArr = json.getJSONArray("Entries");
+                isEmpty = messagesArr.isEmpty();
+                if (!isEmpty) {
+                    for (int i = 0; i < messagesArr.length(); i++) {
+                        JSONObject obj = messagesArr.getJSONObject(i);
+                        callback.refund(obj);
                     }
                 }
             } else {
-                String apiError = con.getHeaderField("ApiError");
+                String apiError = response.headers()
+                        .firstValue("ApiError")
+                        .orElse("Twikey status=" + response.statusCode());
                 throw new TwikeyClient.UserException(apiError);
             }
         } while (!isEmpty);

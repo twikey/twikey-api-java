@@ -1,15 +1,19 @@
 package com.twikey;
 
-import com.twikey.modal.Customer;
-import junit.framework.TestCase;
-import org.json.JSONObject;
+import com.twikey.callback.InvoiceCallback;
+import com.twikey.modal.DocumentRequests;
+import com.twikey.modal.InvoiceRequests;
+import com.twikey.modal.InvoiceResponse;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -19,13 +23,13 @@ public class InvoiceGatewayTest {
 
     private final String ct = System.getenv("CT"); // found @ https://www.twikey.com/r/admin#/c/template
 
-    private Customer customer;
+    private DocumentRequests.Customer customer;
 
     private TwikeyClient api;
 
     @Before
     public void createCustomer() {
-        customer = new Customer()
+        customer = new DocumentRequests.Customer()
                 .setNumber("customerNum123")
                 .setEmail("no-reply@example.com")
                 .setFirstname("Twikey")
@@ -45,22 +49,97 @@ public class InvoiceGatewayTest {
     @Test
     public void testCreateInvoice() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != null);
-        Map<String, String> invoiceDetails = new HashMap<>();
-        invoiceDetails.put("number", "Invss123");
-        invoiceDetails.put("title", "Invoice April");
-        invoiceDetails.put("remittance", "123456789123");
-        invoiceDetails.put("amount", "10.90");
-        invoiceDetails.put("date", "2020-03-20");
-        invoiceDetails.put("duedate", "2020-04-28");
-        JSONObject invoiceResponse = api.invoice().create(Long.parseLong(ct), customer, invoiceDetails);
-        assertNotNull("Payment URL", invoiceResponse.getString("url"));
-        assertNotNull("Invoice Id", invoiceResponse.getString("id"));
+        InvoiceRequests.CreateInvoiceRequest request = new InvoiceRequests.CreateInvoiceRequest("Inv-%s".formatted("Java-Sdk-" + System.currentTimeMillis()), 100.0, LocalDate.now().toString(), LocalDate.now().plusMonths(1).toString(), customer);
+        InvoiceResponse.Invoice invoiceResponse = api.invoice().create(request);
+        assertNotNull("Invoice Id", invoiceResponse.getId());
+        assertNotNull("Invoice Url", invoiceResponse.getUrl());
     }
+
+    @Test
+    public void testUpdateInvoice() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != null);
+        InvoiceRequests.UpdateInvoiceRequest updateRequest = new InvoiceRequests.UpdateInvoiceRequest("58073359-7fd0-4683-a60f-8c08096a189e", "2025-09-01", "2025-09-08")
+                .setTitle("Invoice August");
+        InvoiceResponse.Invoice response = api.invoice().update(updateRequest);
+        assertNotNull("Invoice Id", response.getId());
+        assertNotNull("Invoice Url", response.getUrl());
+    }
+
+    @Test
+    public void testDeleteInvoice() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != null);
+        InvoiceRequests.CreateInvoiceRequest createRequest = new InvoiceRequests.CreateInvoiceRequest("Inv-%s".formatted("Java-Sdk-" + System.currentTimeMillis()), 100.0, LocalDate.now().toString(), LocalDate.now().plusMonths(1).toString(), customer)
+                .setManual(true);
+        InvoiceResponse.Invoice invoiceResponse = api.invoice().create(createRequest);
+        api.invoice().delete(invoiceResponse.getId());
+    }
+
+    @Test
+    public void testInvoiceDetails() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != null);
+        InvoiceRequests.InvoiceDetailRequest request = new InvoiceRequests.InvoiceDetailRequest("58073359-7fd0-4683-a60f-8c08096a189e")
+                .includeCustomer(true)
+                .includeMeta(true)
+                .includeLastPayment(true);
+        InvoiceResponse.Invoice response = api.invoice().details(request);
+        assertNotNull("Invoice Id", response.getId());
+    }
+
+    @Test
+    public void testInvoiceAction() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != null);
+        InvoiceRequests.CreateInvoiceRequest createRequest =
+                new InvoiceRequests.CreateInvoiceRequest("Inv-%s".formatted("Java-Sdk-" + System.currentTimeMillis()), 100.0, LocalDate.now().toString(), LocalDate.now().plusMonths(1).toString(), customer)
+                        .setManual(true);
+        InvoiceResponse.Invoice invoiceResponse = api.invoice().create(createRequest);
+        InvoiceRequests.InvoiceActionRequest actionRequest = InvoiceRequests.InvoiceActionRequest.paymentPlan(invoiceResponse.getId(), 20, 10, 8, "CORERECURRENTNL18268");
+        api.invoice().action(actionRequest);
+    }
+
+    @Test(expected = TwikeyClient.UserException.class)
+    public void testUBLUpload() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != null);
+        InvoiceRequests.UblUploadRequest request = new InvoiceRequests.UblUploadRequest("target/test-classes/empty.ubl");
+        //invalid ubl
+        api.invoice().uploadUbl(request);
+    }
+
+    @Test
+    public void testBatchCreation() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != null);
+        List<InvoiceRequests.CreateInvoiceRequest> invoices = IntStream.range(0, 5)
+                .mapToObj(i -> new InvoiceRequests.CreateInvoiceRequest(
+                        "Inv-" + (System.currentTimeMillis() / 1000 + i), // invoice number
+                        100.0, // amount
+                        LocalDate.now().toString(), // title
+                        LocalDate.now().plusMonths(1).toString(), // title
+                        customer
+                ))
+                .toList();
+        InvoiceRequests.BulkInvoiceRequest request = new InvoiceRequests.BulkInvoiceRequest(invoices);
+        String batchId = api.invoice().createBatch(request);
+        assertNotNull(batchId);
+
+        Map<String, String> response = api.invoice().batchDetails(batchId);
+        assertNotNull(response);
+    }
+
 
     @Test
     public void getInvoicesAndDetails() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
-        api.invoice().feed(updatedInvoice -> assertNotNull("Updated invoice", updatedInvoice),"meta");
-        api.invoice().feed(updatedInvoice -> assertNotNull("Updated invoice", updatedInvoice));
+        api.invoice().feed((InvoiceCallback) updatedInvoice -> {
+            String newState = "";
+            if (Objects.equals(updatedInvoice.getState(), "PAID")) {
+                String lastpayment_ = updatedInvoice.getLastpayment();
+                if (lastpayment_ != null) {
+                    newState = "PAID via %s".formatted(lastpayment_);
+                }
+            } else {
+                newState = "now has state %s".formatted(updatedInvoice.getState());
+            }
+            assertNotNull("invoice", updatedInvoice);
+            System.out.printf("Invoice update with number %s %s euro %s%n", updatedInvoice.getNumber(), updatedInvoice.getAmount(), newState);
+        }, "meta");
     }
 }

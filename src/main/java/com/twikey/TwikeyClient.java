@@ -6,10 +6,10 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.net.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.Map;
@@ -33,6 +33,10 @@ public class TwikeyClient {
     private static final String PROD_ENVIRONMENT = "https://api.twikey.com/creditor";
     private static final String TEST_ENVIRONMENT = "https://api.beta.twikey.com/creditor";
 
+    public static final String HTTP_FORM_ENCODED = "application/x-www-form-urlencoded";
+    public static final String HTTP_APPLICATION_JSON = "application/json";
+    public static final String HTTP_APPLICATION_PDF = "application/pdf";
+
     private static final long MAX_SESSION_AGE = 23 * 60 * 60 * 60; // max 1day, but use 23 to be safe
     private static final String SALT_OWN = "own";
 
@@ -50,6 +54,8 @@ public class TwikeyClient {
     private final PaylinkGateway paylinkGateway;
     private final RefundGateway refundGateway;
 
+    private HttpClient client;
+
     /**
      * @param apikey API key
      */
@@ -61,10 +67,16 @@ public class TwikeyClient {
         this.transactionGateway = new TransactionGateway(this);
         this.paylinkGateway = new PaylinkGateway(this);
         this.refundGateway = new RefundGateway(this);
+        this.client = HttpClient.newHttpClient();
     }
 
     public TwikeyClient withUserAgent(String userAgent) {
         this.userAgent = userAgent;
+        return this;
+    }
+
+    public TwikeyClient withHttpClient(HttpClient client) {
+        this.client = client;
         return this;
     }
 
@@ -89,7 +101,7 @@ public class TwikeyClient {
             HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("User-Agent", userAgent);
-            con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            con.setRequestProperty("Content-Type", HTTP_FORM_ENCODED);
             con.setDoOutput(true);
             con.setDoInput(true);
 
@@ -139,21 +151,21 @@ public class TwikeyClient {
         return result.toString();
     }
 
-    public URL getUrl(String path) throws MalformedURLException {
-        return new URL(String.format("%s%s", endpoint, path));
+    public URI getUrl(String path) throws MalformedURLException {
+        return URI.create(String.format("%s%s", endpoint, path));
     }
 
-    public URL getUrl(String path,String... sideloads) throws MalformedURLException {
+    public URI getUrl(String path, String... sideloads) throws MalformedURLException {
         if (sideloads != null && sideloads.length != 0) {
             StringBuilder sb = new StringBuilder(endpoint).append(path);
             sb.append('?');
             for (String sideload : sideloads) {
                 sb.append("include=").append(sideload).append('&');
             }
-            return new URL(sb.substring(0, sb.length() - 1));
+            return URI.create(sb.substring(0, sb.length() - 1));
         }
         else {
-            return new URL(String.format("%s%s", endpoint, path));
+            return URI.create(String.format("%s%s", endpoint, path));
         }
     }
 
@@ -181,9 +193,22 @@ public class TwikeyClient {
         return refundGateway;
     }
 
+    public <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler) throws IOException, UserException {
+        try {
+            return client.send(request, responseBodyHandler);
+        } catch (InterruptedException e) {
+            throw new UserException("Interrupted while sending request");
+        }
+    }
+
     public static class UserException extends Throwable {
         public UserException(String apiError) {
             super(apiError);
+        }
+
+        @Override
+        public String toString() {
+            return "Twikey user exception " + getMessage();
         }
     }
 

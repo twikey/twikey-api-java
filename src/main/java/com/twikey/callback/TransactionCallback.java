@@ -1,7 +1,7 @@
 package com.twikey.callback;
 
-import org.json.JSONObject;
+import com.twikey.modal.TransactionResponse;
 
 public interface TransactionCallback {
-    void transaction(JSONObject transaction);
+    void transaction(TransactionResponse.Transaction transaction);
 }

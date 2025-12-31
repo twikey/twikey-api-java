@@ -1,11 +1,11 @@
 package com.twikey.callback;
 
-import org.json.JSONObject;
+import com.twikey.modal.DocumentResponse;
 
 public interface DocumentCallback {
-    void newDocument(JSONObject newDocument);
+    void newDocument(DocumentResponse.Document newDocument, String evt_time);
 
-    void updatedDocument(JSONObject updatedDocument);
+    void updatedDocument(DocumentResponse.Document updatedDocument, String updatedDocumentId, String reason, String author, String evt_time);
 
-    void cancelledDocument(JSONObject cancelledDocument);
+    void cancelledDocument(String cancelledDocumentNumber, String reason, String author, String evt_time);
 }
