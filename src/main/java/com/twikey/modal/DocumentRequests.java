@@ -238,7 +238,7 @@ public interface DocumentRequests {
         }
 
         /**
-         * Convert this request to a flat Map<String,String> suitable for the API.
+         * Convert this request to a flat Map suitable for the API.
          */
         public Map<String, String> toRequest() {
             Map<String, String> result = new HashMap<>();
@@ -327,7 +327,7 @@ public interface DocumentRequests {
             return this;
         }
 
-        public InviteRequest setExpiryd(long epoch) {
+        public InviteRequest setExpiry(long epoch) {
             this.ed = ed;
             return this;
         }
@@ -764,7 +764,7 @@ public interface DocumentRequests {
         }
 
         /**
-         * Convert this request to a flat Map<String,String> suitable for the API.
+         * Convert this request to a flat Map suitable for the API.
          */
         public Map<String, String> toRequest() {
             Map<String, String> result = new HashMap<>();

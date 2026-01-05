@@ -288,7 +288,7 @@ public interface InvoiceRequests {
         }
 
         /**
-         * Convert this request to a flat Map<String,String> suitable for the API.
+         * Convert this request to a flat JSONObject suitable for the API.
          */
         public JSONObject toRequest() {
             JSONObject result = new JSONObject();

@@ -282,7 +282,7 @@ public class InvoiceGateway {
      * whether invoices were successfully created or failed during batch upload.
      *
      * @param batchId The unique batch ID returned when the bulk invoice upload was created.
-     * @return Map<String, String> A mapping of invoice identifiers to their respective statuses.
+     * @return BulkInvoiceDetail containing invoice identifiers to their respective statuses.
      * @throws IOException                If a network error occurs while making the request.
      * @throws TwikeyClient.UserException If the API rejects the request or returns a user-related error.
      */

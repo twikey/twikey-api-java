@@ -79,7 +79,7 @@ public class DocumentGateway {
     }
 
     /**
-     * See <a href="https://www.twikey.com/api/#invite-a-customer">Twikey API - Mandate Invite</a></p>
+     * See <a href="https://www.twikey.com/api/#invite-a-customer">Twikey API - Mandate Invite</a>
      *
      * Same parameters as invite, but some extra might be required depending on the method
      * <ul>
@@ -178,7 +178,7 @@ public class DocumentGateway {
      *               or <code>email</code> is required.</p>
      * @return A list of {@link DocumentResponse.Document} objects containing mandate details
      * that match the query.
-     * @throws Exception                  if the request fails
+     * @throws IOException                  if the request fails
      * @throws TwikeyClient.UserException if the API returns a user-related error
      */
     public List<DocumentResponse.Document> query(DocumentRequests.MandateQuery action) throws IOException, TwikeyClient.UserException {
@@ -255,7 +255,7 @@ public class DocumentGateway {
      *
      * @param fetch An object representing information for identifying the mandate.
      * @return A structured response object representing the server’s reply.
-     * @throws Exception                  If the API call fails or the identifier is invalid.
+     * @throws IOException                  If the API call fails or the identifier is invalid.
      * @throws TwikeyClient.UserException If the API returns an error.
      */
     public DocumentResponse.Document fetch(DocumentRequests.MandateDetailRequest fetch) throws IOException, TwikeyClient.UserException {

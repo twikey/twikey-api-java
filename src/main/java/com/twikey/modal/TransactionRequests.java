@@ -311,7 +311,7 @@ public interface TransactionRequests {
      * <p>Typical usage:</p>
      * <pre>
      *     ActionRequest request = new ActionRequest("345", ActionRequest.Action.REOFFER);
-     *     Map<String, String> params = request.toRequest();
+     *     var params = request.toRequest();
      *     // pass params into your OkHttp FormBody builder
      * </pre>
      *
