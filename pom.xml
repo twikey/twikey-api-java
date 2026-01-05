@@ -4,7 +4,7 @@
     <groupId>com.twikey</groupId>
     <artifactId>twikey-api-java</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.8-SNAPSHOT</version>
+    <version>0.2.0</version>
     <name>Twikey Api</name>
     <url>http://maven.apache.org</url>
     <description>Official wrapper around the Twikey.com rest api</description>
