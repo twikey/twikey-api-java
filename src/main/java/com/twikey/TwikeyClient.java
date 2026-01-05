@@ -91,7 +91,7 @@ public class TwikeyClient {
     }
 
     public TwikeyClient withTestEndpoint() {
-        this.endpoint = TEST_ENVIRONMENT;
+        this.endpoint = "https://javasdk.beta.twikey.com/api/creditor";
         return this;
     }
 

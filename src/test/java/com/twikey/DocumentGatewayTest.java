@@ -143,14 +143,13 @@ public class DocumentGatewayTest {
         InviteRequest inviteRequest = new InviteRequest(ct, customer, account)
                 .setForceCheck(true)
                 .setReminderDays(5);
-        SignRequest invite = new SignRequest(inviteRequest, SignRequest.SignMethod.PAPER);
-        DocumentResponse.MandateCreationResponse response = api.document().sign(invite);
+        DocumentResponse.MandateCreationResponse response = api.document().create(inviteRequest);
 
         assertNotNull("Document Reference", response.getMandateNumber());
         UploadPdfRequest pdfRequest = new UploadPdfRequest(response.getMandateNumber(), "target/test-classes/empty.pdf");
         api.document().uploadPdf(pdfRequest);
 
-        DocumentResponse.PdfResponse retrievedPdf = api.document().retrievePdf("CORERECURRENTNL18247");
+        DocumentResponse.PdfResponse retrievedPdf = api.document().retrievePdf(response.getMandateNumber());
         retrievedPdf.save("target/pdf.pdf");
         assertNotNull("Document Reference", retrievedPdf.getFilename());
         assertNotNull("Document Reference", retrievedPdf.getContent());

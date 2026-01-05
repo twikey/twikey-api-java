@@ -198,6 +198,9 @@ public class DocumentGateway {
             String apiError = response.headers()
                     .firstValue("apierror")
                     .orElse("Twikey status=" + response.statusCode());
+            if ("err_not_found".equals(apiError)) {
+                return List.of();
+            }
             throw new TwikeyClient.UserException(apiError);
         }
     }
@@ -389,7 +392,7 @@ public class DocumentGateway {
      */
     public void uploadPdf(DocumentRequests.UploadPdfRequest pdfRequest) throws IOException, TwikeyClient.UserException {
         String postData = getPostDataString(Map.of("mndtId", pdfRequest.mndtId(), "bankSignature", String.valueOf(pdfRequest.bankSignature())));
-        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/mandate?%s".formatted(postData)))
+        HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/mandate/pdf?%s".formatted(postData)))
                 .headers("Content-Type", HTTP_APPLICATION_PDF)
                 .headers("User-Agent", twikeyClient.getUserAgent())
                 .headers("Authorization", twikeyClient.getSessionToken())

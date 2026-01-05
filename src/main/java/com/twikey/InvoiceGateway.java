@@ -286,7 +286,7 @@ public class InvoiceGateway {
      * @throws IOException                If a network error occurs while making the request.
      * @throws TwikeyClient.UserException If the API rejects the request or returns a user-related error.
      */
-    public Map<String, String> batchDetails(String batchId) throws IOException, TwikeyClient.UserException {
+    public InvoiceResponse.BulkInvoiceDetail batchDetails(String batchId) throws IOException, TwikeyClient.UserException {
 
         HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/invoice/bulk?batchId=%s".formatted(batchId)))
                 .header("Content-Type", HTTP_FORM_ENCODED)
@@ -298,7 +298,9 @@ public class InvoiceGateway {
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() == 200) {
             JSONArray array = new JSONArray(new JSONTokener(response.body()));
-            return InvoiceResponse.BulkInvoiceDetail.listFromJson(array);
+            return InvoiceResponse.BulkInvoiceDetail.fromJson(batchId, array);
+        } else if (response.statusCode() == 409) {
+            return InvoiceResponse.BulkInvoiceDetail.PENDING;
         } else {
             String apiError = response.headers()
                     .firstValue("ApiError")

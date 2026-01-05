@@ -9,6 +9,34 @@ import java.util.List;
 import java.util.Map;
 
 public interface InvoiceRequests {
+
+    enum Action {
+        /**
+         * Send invitations via the customer preference (supports fallback)
+         */
+        send,
+        /**
+         * Send invitation by email
+         */
+        email,
+        /**
+         * Send invitation by SMS
+         */
+        sms,
+        /**
+         * Send the invoice over the Peppol network
+         */
+        peppol,
+        /**
+         * Send the invoice via postal service
+         */
+        letter,
+        /**
+         * Create apaymentplan
+         */
+        paymentplan
+    }
+
     /**
      * CreateInvoiceRequest holds the full set of fields used to create an invoice via the Twikey API.
      */
@@ -251,10 +279,8 @@ public interface InvoiceRequests {
         /**
          * @param id Unique invoice ID (required, from Twikey API)
          */
-        public UpdateInvoiceRequest(String id, String date, String duedate) {
+        public UpdateInvoiceRequest(String id) {
             this.id = id;
-            this.date = date;
-            this.duedate = duedate;
         }
 
         private static void putIfNotNull(JSONObject json, String key, Object value) {
@@ -408,8 +434,9 @@ public interface InvoiceRequests {
      * </ul>
      */
     class InvoiceActionRequest {
+
         private final String id;
-        private final String type;
+        private final Action type;
 
         // Payment plan specific fields
         private final Double initialAmount;
@@ -418,7 +445,7 @@ public interface InvoiceRequests {
         private final String mndtId;
 
         // Private constructor: ensures object creation only through factories
-        private InvoiceActionRequest(String id, String type, Double initialAmount, Double recurringAmount, Integer terms, String mndtId) {
+        private InvoiceActionRequest(String id, Action type, Double initialAmount, Double recurringAmount, Integer terms, String mndtId) {
             this.id = id;
             this.type = type;
             this.initialAmount = initialAmount;
@@ -428,13 +455,13 @@ public interface InvoiceRequests {
         }
 
         // Factory method for simple invoice actions
-        public static InvoiceActionRequest simple(String id, String type) {
+        public static InvoiceActionRequest simple(String id, Action type) {
             return new InvoiceActionRequest(id, type, null, null, null, null);
         }
 
         // Factory method for payment plan
         public static InvoiceActionRequest paymentPlan(String id, double initialAmount, double recurringAmount, int terms, String mndtId) {
-            return new InvoiceActionRequest(id, "paymentplan", initialAmount, recurringAmount, terms, mndtId);
+            return new InvoiceActionRequest(id, Action.paymentplan, initialAmount, recurringAmount, terms, mndtId);
         }
 
         private static void putIfNotNull(Map<String, String> map, String key, Object value) {
@@ -444,7 +471,7 @@ public interface InvoiceRequests {
         public Map<String, String> toRequest() {
             Map<String, String> map = new HashMap<>();
             putIfNotNull(map, "id", id);
-            putIfNotNull(map, "type", type);
+            putIfNotNull(map, "type", type.name());
             putIfNotNull(map, "initialAmount", initialAmount);
             putIfNotNull(map, "recurringAmount", recurringAmount);
             putIfNotNull(map, "terms", terms);

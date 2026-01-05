@@ -140,54 +140,31 @@ public interface InvoiceResponse {
     /**
      * Represents the response for a single invoice in a bulk invoice details response.
      */
-    class BulkInvoiceDetail {
+    record BulkInvoiceDetail(String id, Map<String, String> details) {
 
-        private String id;
-        private String status;
+        public static final BulkInvoiceDetail PENDING = new BulkInvoiceDetail(null, null);
 
-        /**
-         * Factory method to create a BulkInvoiceDetail from JSON.
-         *
-         * @param json JSON object containing the bulk invoice detail fields.
-         * @return BulkInvoiceDetail instance.
-         */
-        public static BulkInvoiceDetail fromJson(JSONObject json) {
-            BulkInvoiceDetail detail = new BulkInvoiceDetail();
-            detail.id = json.optString("id");
-            detail.status = json.optString("status");
-            return detail;
+        public boolean isPending() {
+            return this == PENDING;
         }
 
-        /**
-         * Factory method to parse a JSON array into a list of BulkInvoiceDetail objects.
-         *
-         * @param jsonArray JSON array containing bulk invoice detail objects.
-         * @return Map of BulkInvoiceDetail instances.
-         */
-        public static Map<String, String> listFromJson(JSONArray jsonArray) {
+        public static BulkInvoiceDetail fromJson(String batchId, JSONArray array) {
             Map<String, String> details = new HashMap<>();
-            for (int i = 0; i < jsonArray.length(); i++) {
-                details.put(fromJson(jsonArray.getJSONObject(i)).id, fromJson(jsonArray.getJSONObject(i)).status);
+            if (array != null) {
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject invoice = array.getJSONObject(i);
+                    details.put(
+                            invoice.optString("id"),
+                            invoice.optString("status")
+                    );
+                }
             }
-            return details;
-        }
-
-        // --- Getters ---
-        public String getId() {
-            return id;
-        }
-
-        public String getStatus() {
-            return status;
+            return new BulkInvoiceDetail(batchId, details);
         }
 
         @Override
         public String toString() {
-            return "BulkInvoiceDetail{" +
-                    "id='" + id + '\'' +
-                    ", status='" + status + '\'' +
-                    '}';
+            return "BulkInvoiceDetail{id='%s', results='%d'}".formatted(id, details.size());
         }
     }
-
 }
