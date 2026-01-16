@@ -4,7 +4,6 @@ import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.*;
 import java.net.http.HttpClient;
@@ -13,6 +12,7 @@ import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.Map;
+import java.util.Properties;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -29,7 +29,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class TwikeyClient {
 
-    private static final String DEFAULT_USER_HEADER = "twikey/java-v0.1.0";
+    private static final String DEFAULT_USER_HEADER = "twikey/java-v0.2.1-SNAPSHOT";
     private static final String PROD_ENVIRONMENT = "https://api.twikey.com/creditor";
     private static final String TEST_ENVIRONMENT = "https://api.beta.twikey.com/creditor";
 
@@ -37,7 +37,7 @@ public class TwikeyClient {
     public static final String HTTP_APPLICATION_JSON = "application/json";
     public static final String HTTP_APPLICATION_PDF = "application/pdf";
 
-    private static final long MAX_SESSION_AGE = 23 * 60 * 60 * 60; // max 1day, but use 23 to be safe
+    private static final long MAX_SESSION_AGE = 23 * 60 * 60 * 1000; // max 1day, but use 23 to be safe
     private static final String SALT_OWN = "own";
 
     private final String apiKey;
@@ -95,36 +95,40 @@ public class TwikeyClient {
         return this;
     }
 
-    protected String getSessionToken() throws IOException, UnauthenticatedException {
+    protected synchronized String getSessionToken() throws IOException, UnauthenticatedException {
         if ((System.currentTimeMillis() - lastLogin) > MAX_SESSION_AGE) {
-            URL myurl = new URL(endpoint);
-            HttpURLConnection con = (HttpURLConnection) myurl.openConnection();
-            con.setRequestMethod("POST");
-            con.setRequestProperty("User-Agent", userAgent);
-            con.setRequestProperty("Content-Type", HTTP_FORM_ENCODED);
-            con.setDoOutput(true);
-            con.setDoInput(true);
 
-            try (DataOutputStream output = new DataOutputStream(con.getOutputStream())) {
+            try  {
+                String body;
                 if (privateKey != null) {
                     long otp = generateOtp(SALT_OWN, privateKey);
-                    output.writeBytes(String.format("apiToken=%s&otp=%d", apiKey, otp));
+                    body = String.format("apiToken=%s&otp=%d", apiKey, otp);
                 } else {
-                    output.writeBytes(String.format("apiToken=%s", apiKey));
+                    body = String.format("apiToken=%s", apiKey);
                 }
-                output.flush();
+
+                HttpRequest postRequest = HttpRequest.newBuilder()
+                        .uri(URI.create(endpoint))
+                        .header("Content-Type", HTTP_FORM_ENCODED)
+                        .header("User-Agent", getUserAgent())
+                        .POST(HttpRequest.BodyPublishers.ofString(body))
+                        .build();
+
+                HttpResponse<Void> response = client.send(postRequest, HttpResponse.BodyHandlers.discarding());
+                sessionToken = response.headers().firstValue("Authorization").orElse(null);
+
+                if(sessionToken!= null){
+                    lastLogin = System.currentTimeMillis();
+                } else {
+                    lastLogin = 0;
+                    throw new UnauthenticatedException();
+                }
+
             } catch (GeneralSecurityException e) {
                 throw new IOException(e);
-            }
-
-            sessionToken = con.getHeaderField("Authorization");
-            con.disconnect();
-
-            if (sessionToken != null) {
-                lastLogin = System.currentTimeMillis();
-            } else {
-                lastLogin = 0;
-                throw new UnauthenticatedException();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException(e);
             }
         }
         return sessionToken;
