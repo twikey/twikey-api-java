@@ -15,7 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.twikey.TwikeyClient.HTTP_FORM_ENCODED;
+import static com.twikey.TwikeyClient.apiError;
 import static com.twikey.TwikeyClient.getPostDataString;
+
 public class RefundGateway {
 
     private final TwikeyClient twikeyClient;
@@ -66,10 +68,7 @@ public class RefundGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return RefundResponse.Refund.fromJson(json.getJSONArray("Entries").getJSONObject(0));
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -90,10 +89,7 @@ public class RefundGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return RefundResponse.Refund.fromJson(json);
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -110,10 +106,7 @@ public class RefundGateway {
                 .build();
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 204) {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -134,10 +127,7 @@ public class RefundGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return RefundResponse.CreditTransferResponse.fromJson(json.getJSONArray("CreditTransfers").getJSONObject(0));
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -159,10 +149,7 @@ public class RefundGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return RefundResponse.CreditTransferResponse.fromJson(json.getJSONArray("CreditTransfers").getJSONObject(0));
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -200,10 +187,7 @@ public class RefundGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return RefundResponse.AddBeneficiaryResponse.fromJson(json);
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -224,10 +208,7 @@ public class RefundGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return RefundResponse.AddBeneficiaryResponse.fromQuery(json);
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -245,10 +226,7 @@ public class RefundGateway {
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 204) {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -282,13 +260,11 @@ public class RefundGateway {
                     for (int i = 0; i < messagesArr.length(); i++) {
                         JSONObject obj = messagesArr.getJSONObject(i);
                         callback.refund(obj);
+                        callback.refund(RefundResponse.Refund.fromJson(obj));
                     }
                 }
             } else {
-                String apiError = response.headers()
-                        .firstValue("ApiError")
-                        .orElse("Twikey status=" + response.statusCode());
-                throw new TwikeyClient.UserException(apiError);
+                throw new TwikeyClient.UserException(apiError(response));
             }
         } while (!isEmpty);
     }

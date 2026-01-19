@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static com.twikey.modal.DocumentRequests.InviteRequest.putIfNotNull;
+import static com.twikey.modal.RequestUtils.putIfNotNull;
 
 public interface DocumentRequests {
 
@@ -157,19 +157,19 @@ public interface DocumentRequests {
 
         public Map<String, String> asFormParameters() {
             Map<String, String> params = new HashMap<>();
-            params.put("customerNumber", getCustomerNumber());
-            params.put("email", getEmail());
-            params.put("firstname", getFirstname());
-            params.put("lastname", getLastname());
-            params.put("l", getLang());
-            params.put("address", getStreet());
-            params.put("city", getCity());
-            params.put("zip", getZip());
-            params.put("country", getCountry());
-            params.put("mobile", getMobile());
+            putIfNotNull(params, "customerNumber", getCustomerNumber());
+            putIfNotNull(params, "email", getEmail());
+            putIfNotNull(params, "firstname", getFirstname());
+            putIfNotNull(params, "lastname", getLastname());
+            putIfNotNull(params, "l", getLang());
+            putIfNotNull(params, "address", getStreet());
+            putIfNotNull(params, "city", getCity());
+            putIfNotNull(params, "zip", getZip());
+            putIfNotNull(params, "country", getCountry());
+            putIfNotNull(params, "mobile", getMobile());
             if (getCompanyName() != null) {
-                params.put("companyName", getCompanyName());
-                params.put("coc", getCoc());
+                putIfNotNull(params, "companyName", getCompanyName());
+                putIfNotNull(params, "coc", getCoc());
             }
             return params;
         }
@@ -286,16 +286,6 @@ public interface DocumentRequests {
             putIfNotNull(result, "transactionAmount", transactionAmount);
 
             return result;
-        }
-
-        public static void putIfNotNull(Map<String, String> map, String key, Object value) {
-            if (value != null) {
-                if (value instanceof Boolean) {
-                    map.put(key, ((Boolean) value) ? "true" : "false");
-                } else {
-                    map.put(key, String.valueOf(value));
-                }
-            }
         }
 
         private final static Set<String> acceptedLanguages = Set.of("nl", "fr", "en", "pt", "es", "it");

@@ -2,6 +2,8 @@ package com.twikey;
 
 import com.twikey.callback.PaylinkCallback;
 import com.twikey.modal.DocumentRequests;
+import com.twikey.modal.PaylinkRequests;
+import com.twikey.modal.PaylinkResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.twikey.TwikeyClient.HTTP_FORM_ENCODED;
+import static com.twikey.TwikeyClient.apiError;
 import static com.twikey.TwikeyClient.getPostDataString;
 
 public class PaylinkGateway {
@@ -27,6 +30,7 @@ public class PaylinkGateway {
     }
 
     /**
+     * @deprecated Use {@link #create(PaylinkRequests.PaylinkRequest)} instead.
      * <ul>
      * <li>title	Message to the debtor [*1]	Yes	string (200)</li>
      * <li>remittance	Payment message, if empty then title will be used [*2]	No	string</li>
@@ -42,29 +46,23 @@ public class PaylinkGateway {
      * @param ct          <a href="https://www.twikey.com/r/admin#/c/template">Template to use can be found</a>
      * @param customer    Customer details
      * @param linkDetails Map containing any of the parameters in the above table
-     * @return Url to redirect the customer to or to send in an email
+     * @return JSONObject representing the created paylink
      * @throws IOException   When no connection could be made
      * @throws TwikeyClient.UserException When Twikey returns a user error (400)
      */
+    @Deprecated
     public JSONObject create(long ct, DocumentRequests.Customer customer, Map<String, String> linkDetails) throws IOException, TwikeyClient.UserException {
-        Map<String, String> params = new HashMap<>(linkDetails);
-        params.put("ct", String.valueOf(ct));
-        if (customer != null) {
-            params.put("customerNumber", customer.getCustomerNumber());
-            params.put("email", customer.getEmail());
-            params.put("firstname", customer.getFirstname());
-            params.put("lastname", customer.getLastname());
-            params.put("l", customer.getLang());
-            params.put("address", customer.getStreet());
-            params.put("city", customer.getCity());
-            params.put("zip", customer.getZip());
-            params.put("country", customer.getCountry());
-            params.put("mobile", customer.getMobile());
-            if(customer.getCompanyName() != null){
-                params.put("companyName", customer.getCompanyName());
-                params.put("coc", customer.getCoc());
-            }
-        }
+        PaylinkRequests.PaylinkRequest paylinkRequest = new PaylinkRequests.PaylinkRequest(ct, customer, linkDetails);
+        return createPaylink(paylinkRequest);
+    }
+
+    public PaylinkResponse.Paylink create(PaylinkRequests.PaylinkRequest paylinkRequest) throws IOException, TwikeyClient.UserException {
+        JSONObject json = createPaylink(paylinkRequest);
+        return PaylinkResponse.Paylink.fromJson(json);
+    }
+
+    private JSONObject createPaylink(PaylinkRequests.PaylinkRequest paylinkRequest) throws IOException, TwikeyClient.UserException {
+        Map<String, String> params = paylinkRequest.toRequest();
 
         HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/payment/link"))
                 .header("Content-Type", HTTP_FORM_ENCODED)
@@ -80,10 +78,7 @@ public class PaylinkGateway {
                 return new JSONObject(new JSONTokener(br));
             }
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse(null);
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -115,17 +110,17 @@ public class PaylinkGateway {
                     JSONArray messagesArr = json.getJSONArray("Links");
                     isEmpty = messagesArr.isEmpty();
                     if (!isEmpty) {
-                        for (int i = 0; i < messagesArr.length(); i++) {
-                            JSONObject obj = messagesArr.getJSONObject(i);
-                            callback.paylink(obj);
-                        }
+                    for (int i = 0; i < messagesArr.length(); i++) {
+                        JSONObject obj = messagesArr.getJSONObject(i);
+                        callback.paylink(obj);
+                        callback.paylink(PaylinkResponse.Paylink.fromJson(obj));
+                    }
+
                     }
                 }
             } else {
-                String apiError = response.headers()
-                        .firstValue("ApiError")
-                        .orElse(null);
-                throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
+
             }
         } while (!isEmpty);
     }

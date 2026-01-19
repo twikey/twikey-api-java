@@ -56,10 +56,7 @@ public class InvoiceGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return InvoiceResponse.Invoice.fromJson(json);
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -93,10 +90,7 @@ public class InvoiceGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return InvoiceResponse.Invoice.fromJson(json);
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -123,10 +117,7 @@ public class InvoiceGateway {
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 204) {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -161,10 +152,7 @@ public class InvoiceGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return InvoiceResponse.Invoice.fromJson(json);
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -193,10 +181,7 @@ public class InvoiceGateway {
 
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 204) {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -231,10 +216,7 @@ public class InvoiceGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return InvoiceResponse.Invoice.fromJson(json);
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -265,10 +247,7 @@ public class InvoiceGateway {
         if (response.statusCode() == 200) {
             return new JSONObject(new JSONTokener(response.body())).getString("batchId");
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -302,10 +281,7 @@ public class InvoiceGateway {
         } else if (response.statusCode() == 409) {
             return InvoiceResponse.BulkInvoiceDetail.PENDING;
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -346,10 +322,7 @@ public class InvoiceGateway {
                     throw new RuntimeException(e);
                 }
             } else {
-                String apiError = response.headers()
-                        .firstValue("ApiError")
-                        .orElse("Twikey status=" + response.statusCode());
-                throw new TwikeyClient.UserException(apiError);
+                throw new TwikeyClient.UserException(apiError(response));
             }
         } while (!isEmpty);
     }

@@ -1,5 +1,6 @@
 package com.twikey;
 
+import com.twikey.callback.RefundCallback;
 import com.twikey.modal.DocumentRequests;
 import com.twikey.modal.RefundRequests;
 import com.twikey.modal.RefundResponse;
@@ -121,10 +122,13 @@ public class RefundGatewayTest {
     @Test
     public void testFeed() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
-        api.refund().feed(refund -> {
-            assertEquals("Refund was PAID", "PAID", refund.getString("state"));
-            assertNotNull("Refund has ref", refund.getString("ref"));
-            assertNotNull("Refund has amount", refund.getBigDecimal("amount"));
+        api.refund().feed(new RefundCallback() {
+            @Override
+            public void refund(RefundResponse.Refund refund) {
+                assertEquals("Refund was PAID", "PAID", refund.getState());
+                assertNotNull("Refund has ref", refund.getRef());
+                assertNotEquals("Refund has amount", 0.0, refund.getAmount(), 0.001);
+            }
         });
     }
 }

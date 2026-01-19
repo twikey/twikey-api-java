@@ -1,5 +1,6 @@
 package com.twikey.callback;
 
+import com.twikey.modal.RefundResponse;
 import org.json.JSONObject;
 
 public interface RefundCallback {
@@ -18,6 +19,13 @@ public interface RefundCallback {
      * <li>state: Paid</li>
      * <li>bkdate: Date when the transfer was done</li>
      * </ul>
+     * @deprecated Use {@link #refund(RefundResponse.Refund)} instead.
      */
-    void refund(JSONObject refund);
+    @Deprecated
+    default void refund(JSONObject refund) {}
+
+    /**
+     * @param refund Typed refund object
+     */
+    default void refund(RefundResponse.Refund refund) {}
 }

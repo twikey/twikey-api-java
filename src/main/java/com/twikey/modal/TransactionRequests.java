@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.twikey.modal.RequestUtils.putIfNotNull;
+
 public interface TransactionRequests {
     /**
      * This request class is used to construct a payload for creating a new transaction
@@ -90,10 +92,6 @@ public interface TransactionRequests {
             putIfNotNull(payload, "refase2e", refase2e);
             return payload;
         }
-
-        static void putIfNotNull(Map<String, String> map, String key, Object value) {
-            if (value != null) map.put(key, String.valueOf(value));
-        }
     }
 
     /**
@@ -178,10 +176,10 @@ public interface TransactionRequests {
         public Map<String, String> toParams() {
             Map<String, String> params = new HashMap<>();
 
-            if (id != null) params.put("id", id);
-            if (ref != null) params.put("ref", ref);
-            if (mandateNumber != null) params.put("mndtId", mandateNumber);
-            if (state != null) params.put("state", state);
+            putIfNotNull(params, "id", id);
+            putIfNotNull(params, "ref", ref);
+            putIfNotNull(params, "mndtId", mandateNumber);
+            putIfNotNull(params, "state", state);
             // Concatenate includes into the proper query string format
             return params;
         }
@@ -442,14 +440,14 @@ public interface TransactionRequests {
         // --- Convert to request payload ---
         public Map<String, String> toRequest() {
             Map<String, String> payload = new HashMap<>();
-            payload.put("id", id);
-            payload.put("message", message);
-            payload.put("amount", String.valueOf(amount));
+            putIfNotNull(payload, "id", id);
+            putIfNotNull(payload, "message", message);
+            putIfNotNull(payload, "amount", String.valueOf(amount));
 
-            if (ref != null && !ref.isEmpty()) payload.put("ref", ref);
-            if (place != null && !place.isEmpty()) payload.put("place", place);
-            if (iban != null && !iban.isEmpty()) payload.put("iban", iban);
-            if (bic != null && !bic.isEmpty()) payload.put("bic", bic);
+            putIfNotNull(payload, "ref", ref);
+            putIfNotNull(payload, "place", place);
+            putIfNotNull(payload, "iban", iban);
+            putIfNotNull(payload, "bic", bic);
 
             return payload;
         }

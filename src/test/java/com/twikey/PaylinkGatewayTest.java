@@ -1,6 +1,9 @@
 package com.twikey;
 
+import com.twikey.callback.PaylinkCallback;
 import com.twikey.modal.DocumentRequests;
+import com.twikey.modal.PaylinkRequests;
+import com.twikey.modal.PaylinkResponse;
 import org.json.JSONObject;
 import org.junit.Assume;
 import org.junit.Before;
@@ -48,7 +51,7 @@ public class PaylinkGatewayTest {
         Map<String, String> extra = new HashMap<>();
         extra.put("message", "Test Link");
         extra.put("amount", "10.00");
-        JSONObject linkResponse = api.paylink().create(Long.parseLong(ct), customer, extra);
+        PaylinkResponse.Paylink linkResponse = api.paylink().create(new PaylinkRequests.PaylinkRequest(Long.parseLong(ct), customer, extra));
         /*
          * {
          *   "id": 1,
@@ -57,15 +60,19 @@ public class PaylinkGatewayTest {
          *   "url": "https://mycompany.twikey.com/payment/tr_l2iKz0LT8HvRrmf0"
          * }
          */
-        assertNotEquals(0, linkResponse.getLong("id"));
-        assertNotNull("Payment URL", linkResponse.getString("url"));
+        assertNotEquals(0, linkResponse.id());
+        assertNotNull("Payment URL", linkResponse.url());
 
     }
 
     @Test
     public void testFeed() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
-        api.paylink().feed(updatedLink -> assertNotNull("Updated link", updatedLink),"meta");
-        api.paylink().feed(updatedLink -> assertNotNull("Updated link", updatedLink));
+        api.paylink().feed(new PaylinkCallback() {
+            @Override
+            public void paylink(PaylinkResponse.Paylink paylink) {
+                assertNotNull("Updated link", paylink);
+            }
+        }, "meta");
     }
 }
