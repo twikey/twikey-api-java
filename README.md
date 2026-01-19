@@ -13,6 +13,7 @@ Twikey has integrations with a lot of accounting and CRM packages. It is the fir
 European level for Direct Debit and can work directly with all major Belgian and Dutch Banks. However you can use the
 payment options of your favorite PSP to allow other customers to pay as well.
 
+
 ## Requirements ##
 
 [![Maven Build](https://github.com/twikey/twikey-api-java/actions/workflows/maven-build.yml/badge.svg)](https://github.com/twikey/twikey-api-java/actions/workflows/maven-build.yml)

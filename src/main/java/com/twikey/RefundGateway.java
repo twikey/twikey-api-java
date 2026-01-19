@@ -260,6 +260,7 @@ public class RefundGateway {
                     for (int i = 0; i < messagesArr.length(); i++) {
                         JSONObject obj = messagesArr.getJSONObject(i);
                         callback.refund(obj);
+                        callback.refund(RefundResponse.Refund.fromJson(obj));
                     }
                 }
             } else {

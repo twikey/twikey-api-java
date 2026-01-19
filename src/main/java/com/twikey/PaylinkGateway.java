@@ -110,10 +110,12 @@ public class PaylinkGateway {
                     JSONArray messagesArr = json.getJSONArray("Links");
                     isEmpty = messagesArr.isEmpty();
                     if (!isEmpty) {
-                        for (int i = 0; i < messagesArr.length(); i++) {
-                            JSONObject obj = messagesArr.getJSONObject(i);
-                            callback.paylink(obj);
-                        }
+                    for (int i = 0; i < messagesArr.length(); i++) {
+                        JSONObject obj = messagesArr.getJSONObject(i);
+                        callback.paylink(obj);
+                        callback.paylink(PaylinkResponse.Paylink.fromJson(obj));
+                    }
+
                     }
                 }
             } else {
