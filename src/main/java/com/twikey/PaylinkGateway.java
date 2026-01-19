@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.twikey.TwikeyClient.HTTP_FORM_ENCODED;
@@ -110,12 +109,11 @@ public class PaylinkGateway {
                     JSONArray messagesArr = json.getJSONArray("Links");
                     isEmpty = messagesArr.isEmpty();
                     if (!isEmpty) {
-                    for (int i = 0; i < messagesArr.length(); i++) {
-                        JSONObject obj = messagesArr.getJSONObject(i);
-                        callback.paylink(obj);
-                        callback.paylink(PaylinkResponse.Paylink.fromJson(obj));
-                    }
-
+                        for (int i = 0; i < messagesArr.length(); i++) {
+                            JSONObject obj = messagesArr.getJSONObject(i);
+                            callback.paylink(obj);
+                            callback.paylink(PaylinkResponse.Paylink.fromJson(obj));
+                        }
                     }
                 }
             } else {
