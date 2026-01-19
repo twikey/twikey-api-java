@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.twikey.modal.RequestUtils.putIfNotNull;
+
 public interface InvoiceRequests {
 
     enum Action {
@@ -58,10 +60,6 @@ public interface InvoiceRequests {
             this.date = date;
             this.duedate = duedate;
             this.customer = customer;
-        }
-
-        private static void putIfNotNull(JSONObject map, String key, Object value) {
-            if (value != null) map.put(key, value);
         }
 
         // Fluent setters
@@ -283,10 +281,6 @@ public interface InvoiceRequests {
             this.id = id;
         }
 
-        private static void putIfNotNull(JSONObject json, String key, Object value) {
-            if (value != null) json.put(key, value.toString());
-        }
-
         /**
          * Convert this request to a flat JSONObject suitable for the API.
          */
@@ -462,10 +456,6 @@ public interface InvoiceRequests {
         // Factory method for payment plan
         public static InvoiceActionRequest paymentPlan(String id, double initialAmount, double recurringAmount, int terms, String mndtId) {
             return new InvoiceActionRequest(id, Action.paymentplan, initialAmount, recurringAmount, terms, mndtId);
-        }
-
-        private static void putIfNotNull(Map<String, String> map, String key, Object value) {
-            if (value != null) map.put(key, String.valueOf(value));
         }
 
         public Map<String, String> toRequest() {

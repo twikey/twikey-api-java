@@ -88,7 +88,6 @@ JSONObject invite = api.document().create(ct,customer,extraParams);
 _After creation, the link available in invite['url'] can be used to redirect the customer into the signing flow or even 
 send him a link through any other mechanism. Ideally you store the mandatenumber for future usage (eg. sending transactions)._
 
-
 ### Feed
 
 Once signed, a webhook is sent (see below) after which you can fetch the detail through the document feed, which you can actually

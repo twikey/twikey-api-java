@@ -4,6 +4,8 @@ package com.twikey.modal;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.twikey.modal.RequestUtils.putIfNotNull;
+
 public interface RefundRequests {
     /**
      * This request class is used to construct a payload for creating a new credit transfer.
@@ -78,10 +80,6 @@ public interface RefundRequests {
             putIfNotNull(payload, "date", date);
             putIfNotNull(payload, "place", place);
             return payload;
-        }
-
-        static void putIfNotNull(Map<String, String> map, String key, Object value) {
-            if (value != null) map.put(key, String.valueOf(value));
         }
     }
 
@@ -212,10 +210,6 @@ public interface RefundRequests {
             putIfNotNull(payload, "vatno", vatno);
             putIfNotNull(payload, "bic", bic);
             return payload;
-        }
-
-        public static void putIfNotNull(Map<String, String> map, String key, Object value) {
-            if (value != null) map.put(key, String.valueOf(value));
         }
     }
 
