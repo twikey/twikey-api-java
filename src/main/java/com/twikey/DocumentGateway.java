@@ -71,10 +71,7 @@ public class DocumentGateway {
                 } */
             return DocumentResponse.MandateCreationResponse.fromJson(response.body());
         } else {
-            String apiError = response.headers()
-                    .firstValue("apierror")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -114,10 +111,7 @@ public class DocumentGateway {
                 } */
             return DocumentResponse.MandateCreationResponse.fromJson(response.body());
         } else {
-            String apiError = response.headers()
-                    .firstValue("apierror")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -149,10 +143,7 @@ public class DocumentGateway {
                 .build();
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 204) {
-            String apiError = response.headers()
-                    .firstValue("apierror")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -195,9 +186,7 @@ public class DocumentGateway {
         if (response.statusCode() == 200) {
             return DocumentResponse.Document.fromQuery(json);
         } else {
-            String apiError = response.headers()
-                    .firstValue("apierror")
-                    .orElse("Twikey status=" + response.statusCode());
+            String apiError = apiError(response);
             if ("err_not_found".equals(apiError)) {
                 return List.of();
             }
@@ -238,10 +227,7 @@ public class DocumentGateway {
                 .build();
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {
-            String apiError = response.headers()
-                    .firstValue("apierror")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -275,10 +261,7 @@ public class DocumentGateway {
                 return DocumentResponse.Document.fromJson(json, null);
             }
         } else {
-            String apiError = response.headers()
-                    .firstValue("apierror")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -306,10 +289,7 @@ public class DocumentGateway {
                 .build();
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 204) {
-            String apiError = response.headers()
-                    .firstValue("apierror")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -336,10 +316,7 @@ public class DocumentGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return DocumentResponse.CustomerAccessResponse.fromJson(json);
         } else {
-            String apiError = response.headers()
-                    .firstValue("apierror")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -370,10 +347,7 @@ public class DocumentGateway {
             }
             return new DocumentResponse.PdfResponse(response.body(), filename);
         } else {
-            String apiError = response.headers()
-                    .firstValue("apierror")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -400,10 +374,7 @@ public class DocumentGateway {
                 .build();
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {
-            String apiError = response.headers()
-                    .firstValue("apierror")
-                    .orElse("Twikey status=" + response.statusCode());
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -445,12 +416,10 @@ public class DocumentGateway {
                         }
                     }
                 }
-            } else {
-                String apiError = response.headers()
-                        .firstValue("apierror")
-                        .orElse("Twikey status=" + response.statusCode());
-                throw new TwikeyClient.UserException(apiError);
-            }
+        } else {
+            throw new TwikeyClient.UserException(apiError(response));
+        }
+
         } while (!isEmpty);
     }
 }

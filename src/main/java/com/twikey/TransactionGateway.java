@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.twikey.TwikeyClient.HTTP_FORM_ENCODED;
+import static com.twikey.TwikeyClient.apiError;
 import static com.twikey.TwikeyClient.getPostDataString;
 
 public class TransactionGateway {
@@ -56,10 +57,7 @@ public class TransactionGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return TransactionResponse.Transaction.fromJson(json.getJSONArray("Entries").getJSONObject(0));
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse(null);
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -91,10 +89,7 @@ public class TransactionGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return TransactionResponse.Transaction.fromJson(json.getJSONArray("Entries").getJSONObject(0));
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse(null);
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -121,10 +116,7 @@ public class TransactionGateway {
                 .build();
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 204) {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse(null);
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -152,10 +144,7 @@ public class TransactionGateway {
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 204) {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse(null);
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -186,10 +175,7 @@ public class TransactionGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return TransactionResponse.Refund.fromJson(json.getJSONArray("Entries").getJSONObject(0));
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse(null);
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -217,10 +203,7 @@ public class TransactionGateway {
         HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 204) {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse(null);
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -251,10 +234,7 @@ public class TransactionGateway {
             JSONObject json = new JSONObject(new JSONTokener(response.body()));
             return TransactionResponse.Transaction.fromQuery(json);
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse(null);
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -294,10 +274,7 @@ public class TransactionGateway {
                     throw new RuntimeException(e);
                 }
             } else {
-                String apiError = response.headers()
-                        .firstValue("ApiError")
-                        .orElse(null);
-                throw new TwikeyClient.UserException(apiError);
+                throw new TwikeyClient.UserException(apiError(response));
             }
         } while (!isEmpty);
     }

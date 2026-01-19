@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.twikey.TwikeyClient.HTTP_FORM_ENCODED;
+import static com.twikey.TwikeyClient.apiError;
 import static com.twikey.TwikeyClient.getPostDataString;
 
 public class PaylinkGateway {
@@ -80,10 +81,7 @@ public class PaylinkGateway {
                 return new JSONObject(new JSONTokener(br));
             }
         } else {
-            String apiError = response.headers()
-                    .firstValue("ApiError")
-                    .orElse(null);
-            throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
         }
     }
 
@@ -122,10 +120,8 @@ public class PaylinkGateway {
                     }
                 }
             } else {
-                String apiError = response.headers()
-                        .firstValue("ApiError")
-                        .orElse(null);
-                throw new TwikeyClient.UserException(apiError);
+            throw new TwikeyClient.UserException(apiError(response));
+
             }
         } while (!isEmpty);
     }

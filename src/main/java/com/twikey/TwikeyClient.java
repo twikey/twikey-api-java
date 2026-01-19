@@ -205,6 +205,13 @@ public class TwikeyClient {
         }
     }
 
+    protected static String apiError(HttpResponse<?> response) {
+        return response.headers()
+                .firstValue("ApiError")
+                .or(() -> response.headers().firstValue("apierror"))
+                .orElse("Twikey status=" + response.statusCode());
+    }
+
     public static class UserException extends Throwable {
         public UserException(String apiError) {
             super(apiError);
@@ -250,7 +257,6 @@ public class TwikeyClient {
             for (int i = 0; i < calculated.length; i++) {
                 equal = equal && (providedSignature[i] == calculated[i]);
             }
-//            System.out.println("Signature = " + equal);
             return equal;
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
@@ -314,7 +320,7 @@ public class TwikeyClient {
         if (privateKey == null)
             throw new IllegalArgumentException("Invalid key");
 
-        long counter = (long) Math.floor(System.currentTimeMillis() / 30000);
+        long counter = (long) Math.floor(System.currentTimeMillis() / 30000d);
         byte[] key = hexStringToByteArray(privateKey);
 
         if (salt != null) {
