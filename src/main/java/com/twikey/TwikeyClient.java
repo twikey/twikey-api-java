@@ -284,11 +284,9 @@ public class TwikeyClient {
                 payload += "/" + token;
             }
             byte[] calculated = mac.doFinal(payload.getBytes(UTF_8));
-            boolean equal = true;
-            for (int i = 0; i < calculated.length; i++) {
-                equal = equal && (providedSignature[i] == calculated[i]);
-            }
-            return equal;
+
+            return MessageDigest.isEqual(calculated, providedSignature);
+
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
