@@ -12,7 +12,6 @@ import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.Map;
-import java.util.Properties;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 

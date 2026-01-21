@@ -318,7 +318,7 @@ public interface DocumentRequests {
         }
 
         public InviteRequest setExpiry(long epoch) {
-            this.ed = ed;
+            this.ed = String.valueOf(epoch);
             return this;
         }
 
