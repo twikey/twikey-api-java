@@ -4,6 +4,7 @@ package com.twikey.modal;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -171,21 +172,6 @@ public interface InvoiceResponse {
     /**
      * PDF class specifically for invoices
      */
-    class Pdf {
-        private final byte[] content;
-        private final String filename;
+    record Pdf(InputStream content, String filename) {}
 
-        public Pdf(byte[] content, String filename) {
-            this.content = content;
-            this.filename = filename;
-        }
-
-        public byte[] getContent() {
-            return content;
-        }
-
-        public String getFilename() {
-            return filename;
-        }
-    }
 }

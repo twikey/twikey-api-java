@@ -3,12 +3,14 @@ package com.twikey;
 import com.twikey.callback.InvoiceCallback;
 import com.twikey.modal.InvoiceRequests;
 import com.twikey.modal.InvoiceResponse;
+import com.twikey.modal.ResponseUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
@@ -354,24 +356,22 @@ public class InvoiceGateway {
         HttpRequest httpRequest = HttpRequest.newBuilder(
                         twikeyClient.getUrl("/invoice/%s/pdf".formatted(request.id()))
                 )
-                .header("Content-Type", HTTP_APPLICATION_JSON)
+                .header("Accept", "application/pdf")
                 .header("User-Agent", twikeyClient.getUserAgent())
                 .header("Authorization", twikeyClient.getSessionToken())
                 .GET()
                 .build();
 
-        HttpResponse<byte[]> response =
-                twikeyClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<InputStream> response = twikeyClient.send(
+                httpRequest,
+                HttpResponse.BodyHandlers.ofInputStream()
+        );
+
 
         if (response.statusCode() == 200) {
-            String disposition = response.headers().firstValue("content-disposition").orElse(null);
-            String filename = null;
-            if (disposition != null) {
-                String[] parts = disposition.split("=");
-                if (parts.length == 2) {
-                    filename = parts[1].trim().replace("\"", "");
-                }
-            }
+            String filename = ResponseUtils.extractFilenameFromContentDisposition(response.headers())
+                    .orElse(request.id() + ".pdf");
+
             return new InvoiceResponse.Pdf(response.body(), filename);
         } else {
             throw new TwikeyClient.UserException(apiError(response));

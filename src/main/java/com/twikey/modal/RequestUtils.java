@@ -6,6 +6,10 @@ import java.util.Map;
 
 public class RequestUtils {
 
+    private RequestUtils() {
+        // prevent instantiation
+    }
+
     public static void putIfNotNull(Map<String, String> map, String key, Object value) {
         if (value != null) {
             String val = String.valueOf(value);

@@ -19,6 +19,8 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 
 public class InvoiceGatewayTest {
 
@@ -145,12 +147,14 @@ public class InvoiceGatewayTest {
         InvoiceResponse.Pdf pdf = api.invoice().pdf(pdfRequest);
 
         assertNotNull("PDF object should not be null", pdf);
-        assertNotNull("PDF content should not be null", pdf.getContent());
-        assertNotNull("PDF filename should not be null", pdf.getFilename());
+        assertNotNull("PDF content should not be null", pdf.content());
+        assertNotNull("PDF filename should not be null", pdf.filename());
+
+        byte[] retrievedBytes = pdf.content().readAllBytes();
+        assertTrue("PDF should not be empty", retrievedBytes.length > 0);
 
         System.out.printf("Retrieved PDF for invoice %s with filename: %s (%d bytes)%n",
-                invoiceId, pdf.getFilename(), pdf.getContent().length);
-
+                invoiceId, pdf.filename(), retrievedBytes.length);
     }
 
 }
