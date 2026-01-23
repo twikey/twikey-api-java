@@ -14,6 +14,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Base64;
+
 import static org.junit.Assert.assertNotNull;
 
 public class InvoiceGatewayTest {
@@ -116,4 +120,37 @@ public class InvoiceGatewayTest {
             System.out.printf("Invoice update with number %s %s euro %s%n", updatedInvoice.getNumber(), updatedInvoice.getAmount(), newState);
         }, "meta");
     }
+
+    @Test
+    public void testRetrieveInvoicePdf() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey and CT are set", apiKey != null && ct != null);
+
+        // 1. Create a new invoice (we can optionally attach a PDF)
+        String title = "PDF-Test-" + System.currentTimeMillis();
+        byte[] pdfBytes = Files.readAllBytes(Paths.get("src/test/resources/empty.pdf"));
+        String base64Pdf = Base64.getEncoder().encodeToString(pdfBytes);
+        InvoiceRequests.CreateInvoiceRequest request = new InvoiceRequests.CreateInvoiceRequest(
+                title,
+                100.0,
+                LocalDate.now().toString(),
+                LocalDate.now().plusMonths(1).toString(),
+                customer
+        ).setPdf(base64Pdf);
+
+        InvoiceResponse.Invoice createdInvoice = api.invoice().create(request);
+        String invoiceId = createdInvoice.getId();
+        assertNotNull("Invoice ID should not be null", invoiceId);
+
+        InvoiceRequests.InvoicePdfRequest pdfRequest = new InvoiceRequests.InvoicePdfRequest(invoiceId);
+        InvoiceResponse.Pdf pdf = api.invoice().pdf(pdfRequest);
+
+        assertNotNull("PDF object should not be null", pdf);
+        assertNotNull("PDF content should not be null", pdf.getContent());
+        assertNotNull("PDF filename should not be null", pdf.getFilename());
+
+        System.out.printf("Retrieved PDF for invoice %s with filename: %s (%d bytes)%n",
+                invoiceId, pdf.getFilename(), pdf.getContent().length);
+
+    }
+
 }

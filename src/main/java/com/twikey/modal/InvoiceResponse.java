@@ -167,4 +167,25 @@ public interface InvoiceResponse {
             return "BulkInvoiceDetail{id='%s', results='%d'}".formatted(id, details.size());
         }
     }
+
+    /**
+     * PDF class specifically for invoices
+     */
+    class Pdf {
+        private final byte[] content;
+        private final String filename;
+
+        public Pdf(byte[] content, String filename) {
+            this.content = content;
+            this.filename = filename;
+        }
+
+        public byte[] getContent() {
+            return content;
+        }
+
+        public String getFilename() {
+            return filename;
+        }
+    }
 }

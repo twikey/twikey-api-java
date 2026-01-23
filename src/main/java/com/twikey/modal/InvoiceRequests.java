@@ -94,7 +94,7 @@ public interface InvoiceRequests {
         }
 
         /**
-         * Control whether or not an traansaction is created provided a signed mandate is available
+         * Control whether or not a transaction is created provided a signed mandate is available
          *
          * @param manual when true no transaction is created to accompany the invoice
          */
@@ -593,5 +593,29 @@ public interface InvoiceRequests {
             return array;
         }
     }
+
+    /**
+     * InvoicePdfRequest represents a request to retrieve the PDF for a single invoice
+     * via the Twikey API.
+     *
+     * <p>This request only requires the invoice UUID. The API will return
+     * the raw PDF content and filename for the specified invoice.</p>
+     *
+     * <p>Example usage:</p>
+     * <pre>{@code
+     * InvoiceRequests.InvoicePdfRequest pdfRequest = new InvoiceRequests.InvoicePdfRequest("032f42b8-9afc-459d-b0f5-b81a85a69e95");
+     * InvoiceResponse.Pdf pdf = invoiceGateway.pdf(pdfRequest);
+     * byte[] content = pdf.getContent();
+     * String filename = pdf.getFilename();
+     * }</pre>
+     */
+    record InvoicePdfRequest(String id) {
+        public InvoicePdfRequest {
+            if (id == null || id.isEmpty()) {
+                throw new IllegalArgumentException("Invoice UUID is required");
+            }
+        }
+    }
+
 
 }

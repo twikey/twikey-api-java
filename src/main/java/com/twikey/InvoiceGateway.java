@@ -287,12 +287,12 @@ public class InvoiceGateway {
 
 
     /**
-     * Get updates about all mandates (new/updated/cancelled)
+     * Get updates about all invoice states (BOOKED, PENDING, EXPIRED, PAID)
      *
      * @param invoiceCallback Callback for every change
      * @param sideloads       items to include in the sideloading @link <a href="https://www.twikey.com/api/#invoice-feed">www.twikey.com/api/#invoice-feed</a>
      * @throws IOException                When a network issue happened
-     * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
+     * @throws TwikeyClient.UserException When there was an issue while retrieving the invoice states (eg. invalid apikey)
      */
     public void feed(InvoiceCallback invoiceCallback, String... sideloads) throws IOException, TwikeyClient.UserException {
 
@@ -326,4 +326,58 @@ public class InvoiceGateway {
             }
         } while (!isEmpty);
     }
+
+
+    /**
+     * See <a href="https://www.twikey.com/api/#retrieve-invoice-pdf">Twikey API - Retrieve Invoice PDF</a>
+     * <p>
+     * Retrieves the PDF for a specific invoice using its UUID. The API will return
+     * the raw PDF content along with the filename as set by the server.
+     * </p>
+     *
+     * @param request An {@link InvoiceRequests.InvoicePdfRequest} containing the invoice UUID.
+     * @return {@link InvoiceResponse.Pdf} A structured response object containing
+     *         the PDF content and filename.
+     * @throws IOException                If a network error occurs during the request.
+     * @throws TwikeyClient.UserException If the API returns an error response.
+     *
+     * <p>Example usage:</p>
+     * <pre>{@code
+     * InvoiceRequests.InvoicePdfRequest pdfRequest = new InvoiceRequests.InvoicePdfRequest("032f42b8-9afc-459d-b0f5-b81a85a69e95");
+     * InvoiceResponse.Pdf pdf = invoiceGateway.pdf(pdfRequest);
+     * byte[] content = pdf.getContent();
+     * String filename = pdf.getFilename();
+     * }</pre>
+     */
+    public InvoiceResponse.Pdf pdf(InvoiceRequests.InvoicePdfRequest request)
+            throws IOException, TwikeyClient.UserException {
+        HttpRequest httpRequest = HttpRequest.newBuilder(
+                        twikeyClient.getUrl("/invoice/%s/pdf".formatted(request.id()))
+                )
+                .header("Content-Type", HTTP_APPLICATION_JSON)
+                .header("User-Agent", twikeyClient.getUserAgent())
+                .header("Authorization", twikeyClient.getSessionToken())
+                .GET()
+                .build();
+
+        HttpResponse<byte[]> response =
+                twikeyClient.send(httpRequest, HttpResponse.BodyHandlers.ofByteArray());
+
+        if (response.statusCode() == 200) {
+            String disposition = response.headers().firstValue("content-disposition").orElse(null);
+            String filename = null;
+            if (disposition != null) {
+                String[] parts = disposition.split("=");
+                if (parts.length == 2) {
+                    filename = parts[1].trim().replace("\"", "");
+                }
+            }
+            return new InvoiceResponse.Pdf(response.body(), filename);
+        } else {
+            throw new TwikeyClient.UserException(apiError(response));
+        }
+    }
+
+
+
 }
