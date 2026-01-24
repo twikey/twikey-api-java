@@ -3,6 +3,7 @@ package com.twikey;
 import com.twikey.callback.DocumentCallback;
 import com.twikey.modal.DocumentRequests;
 import com.twikey.modal.DocumentResponse;
+import com.twikey.modal.ResponseUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -332,19 +333,16 @@ public class DocumentGateway {
      */
     public DocumentResponse.PdfResponse retrievePdf(String mandateNumber) throws IOException, TwikeyClient.UserException {
         HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/mandate/pdf?mndtId=" + mandateNumber))
-                .headers("Content-Type", HTTP_FORM_ENCODED)
+                .header("Accept", "application/pdf")
                 .headers("User-Agent", twikeyClient.getUserAgent())
                 .headers("Authorization", twikeyClient.getSessionToken())
                 .GET()
                 .build();
         HttpResponse<byte[]> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
         if (response.statusCode() == 200) {
-            String disposition = response.headers().firstValue("content-disposition").orElse("=unknown.pdf");
-            String[] parts = disposition.split("=");
-            String filename = null;
-            if (parts.length == 2) {
-                filename = parts[1].trim().replace("\"", "");
-            }
+            String filename = ResponseUtils.extractFilenameFromContentDisposition(response.headers())
+                    .orElse(mandateNumber + ".pdf");
+
             return new DocumentResponse.PdfResponse(response.body(), filename);
         } else {
             throw new TwikeyClient.UserException(apiError(response));

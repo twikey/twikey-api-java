@@ -4,6 +4,7 @@ package com.twikey.modal;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -167,4 +168,10 @@ public interface InvoiceResponse {
             return "BulkInvoiceDetail{id='%s', results='%d'}".formatted(id, details.size());
         }
     }
+
+    /**
+     * PDF class specifically for invoices
+     */
+    record Pdf(InputStream content, String filename) {}
+
 }
