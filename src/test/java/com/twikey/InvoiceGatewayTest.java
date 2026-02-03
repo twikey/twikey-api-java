@@ -1,6 +1,5 @@
 package com.twikey;
 
-import com.twikey.callback.InvoiceCallback;
 import com.twikey.modal.DocumentRequests;
 import com.twikey.modal.InvoiceRequests;
 import com.twikey.modal.InvoiceResponse;
@@ -108,7 +107,7 @@ public class InvoiceGatewayTest {
     @Test
     public void getInvoicesAndDetails() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
-        api.invoice().feed((InvoiceCallback) updatedInvoice -> {
+        api.invoice().feed(updatedInvoice -> {
             String newState = "";
             if (Objects.equals(updatedInvoice.getState(), "PAID")) {
                 String lastpayment_ = updatedInvoice.getLastpayment();
@@ -157,4 +156,12 @@ public class InvoiceGatewayTest {
                 invoiceId, pdf.filename(), retrievedBytes.length);
     }
 
+    @Test
+    public void getInvoicePayments() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey is set", apiKey != null);
+        api.invoice().payment(payment -> {
+            assertNotNull("payment", payment);
+            System.out.printf("Payment event with number %s %s euro %s%n", payment.origin(), payment.amount(), payment.details());
+        });
+    }
 }

@@ -1,6 +1,7 @@
 package com.twikey;
 
 import com.twikey.callback.InvoiceCallback;
+import com.twikey.callback.PaymentCallback;
 import com.twikey.modal.InvoiceRequests;
 import com.twikey.modal.InvoiceResponse;
 import com.twikey.modal.ResponseUtils;
@@ -329,6 +330,44 @@ public class InvoiceGateway {
         } while (!isEmpty);
     }
 
+    /**
+     * Get updates about all payments on invoices (paymentlink, direct debit, card, transfer, ...)
+     *
+     * @param paymentCallback Callback for every payment
+     * @throws IOException                When a network issue happened
+     * @throws TwikeyClient.UserException When there was an issue while retrieving the mandates (eg. invalid apikey)
+     */
+    public void payment(PaymentCallback paymentCallback) throws IOException, TwikeyClient.UserException {
+        boolean isEmpty;
+        do {
+            HttpRequest request = HttpRequest.newBuilder(twikeyClient.getUrl("/invoice/payment/feed"))
+                    .headers("Content-Type", HTTP_FORM_ENCODED)
+                    .headers("User-Agent", twikeyClient.getUserAgent())
+                    .headers("Authorization", twikeyClient.getSessionToken())
+                    .GET()
+                    .build();
+            HttpResponse<String> response = twikeyClient.send(request, HttpResponse.BodyHandlers.ofString());
+            int responseCode = response.statusCode();
+            if (responseCode == 200) {
+                try {
+                    JSONObject json = new JSONObject(new JSONTokener(response.body()));
+
+                    JSONArray invoicesArr = json.getJSONArray("Payments");
+                    isEmpty = invoicesArr.isEmpty();
+                    if (!invoicesArr.isEmpty()) {
+                        for (int i = 0; i < invoicesArr.length(); i++) {
+                            JSONObject obj = invoicesArr.getJSONObject(i);
+                            paymentCallback.payment(InvoiceResponse.Event.fromJson(obj));
+                        }
+                    }
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                throw new TwikeyClient.UserException(apiError(response));
+            }
+        } while (!isEmpty);
+    }
 
     /**
      * See <a href="https://www.twikey.com/api/#retrieve-invoice-pdf">Twikey API - Retrieve Invoice PDF</a>

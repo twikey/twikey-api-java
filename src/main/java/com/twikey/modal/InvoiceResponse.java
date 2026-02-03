@@ -5,6 +5,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -174,4 +175,114 @@ public interface InvoiceResponse {
      */
     record Pdf(InputStream content, String filename) {}
 
+
+    enum EventType {
+        PAYMENT,
+        PAYMENT_FAILURE,
+        REFUND;
+
+        public static EventType parse(String eventType) {
+            if (eventType == null) {
+                return null;
+            }
+            return switch (eventType) {
+                case "payment" -> PAYMENT;
+                case "payment_failure" -> PAYMENT_FAILURE;
+                case "refund" -> REFUND;
+                default -> null;
+            };
+        }
+    }
+
+    enum GatewayType {
+        BANK,
+        PSP;
+
+        public static GatewayType parse(String type) {
+            if (type == null) {
+                return null;
+            }
+            return switch (type) {
+                case "bank" -> BANK;
+                case "psp" -> PSP;
+                default -> null;
+            };
+        }
+    }
+
+    record Origin(
+            String object, // "invoice"
+            String id,
+            String number,
+            String ref
+    ) {
+        public static Origin fromJson(JSONObject origin) {
+            return new Origin(
+                    origin.getString("object"),
+                    origin.getString("id"),
+                    origin.getString("number"),
+                    origin.optString("ref")
+            );
+        }
+    }
+
+    record Gateway(int id, String name, GatewayType type, String iban /* nullable*/) {
+        public static Gateway fromJson(JSONObject gateway) {
+            return new Gateway(
+                    gateway.getInt("id"),
+                    gateway.getString("name"),
+                    GatewayType.parse(gateway.getString("type")),
+                    gateway.optString("iban")
+            );
+        }
+    }
+
+    record EventError(
+            String code,
+            String description,
+            String category,
+            String externalCode,
+            String action,
+            int actionStep
+    ) {
+        public static EventError parse(JSONObject json) {
+            if (json == null) return null;
+            return new EventError(
+                    json.getString("code"),
+                    json.getString("description"),
+                    json.getString("category"),
+                    json.getString("externalCode"),
+                    json.optString("action"),
+                    json.optInt("actionStep")
+            );
+        }
+    }
+
+    record Event(
+            String eventId,
+            EventType eventType,
+            Instant occurredAt,
+            double amount,
+            String currency,
+            Origin origin,
+            Gateway gateway,
+            Map<String, Object> details,
+            EventError error // nullable
+    ) {
+        public static Event fromJson(JSONObject json) {
+            Map<String, Object> details = json.getJSONObject("details").toMap();
+            return
+                    new Event(
+                            json.getString("eventId"),
+                            EventType.parse(json.getString("eventType")),
+                            Instant.parse(json.getString("occurredAt")),
+                            json.getDouble("amount"),
+                            json.getString("currency"),
+                            Origin.fromJson(json.getJSONObject("origin")),
+                            Gateway.fromJson(json.getJSONObject("gateway")),
+                            details,
+                            EventError.parse(json.optJSONObject("error"))
+                    );
+        }
+    }
 }
