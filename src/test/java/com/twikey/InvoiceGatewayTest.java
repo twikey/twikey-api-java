@@ -10,6 +10,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
@@ -75,6 +76,18 @@ public class InvoiceGatewayTest {
         api.invoice().action(actionRequest);
     }
 
+
+    @Test
+    public void testCreateInvoiceWithCustomAttribute() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey is set", apiKey != null);
+        String number = "Inv-CustomAttr-" + System.currentTimeMillis();
+        InvoiceRequests.CreateInvoiceRequest request = new InvoiceRequests.CreateInvoiceRequest(
+                number, 50.0, LocalDate.now().toString(), LocalDate.now().plusMonths(1).toString(), customer)
+                .setExtra(Map.of("vehicle", "BMW 3-Series"));
+        InvoiceResponse.Invoice response = api.invoice().create(request);
+        assertNotNull("Invoice Id", response.getId());
+        System.out.printf("Created invoice %s with custom attribute vehicle%n", response.getId());
+    }
 
     @Test(expected = TwikeyClient.UserException.class)
     public void testUBLUpload() throws IOException, TwikeyClient.UserException {
