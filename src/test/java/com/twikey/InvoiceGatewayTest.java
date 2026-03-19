@@ -76,7 +76,6 @@ public class InvoiceGatewayTest {
         api.invoice().action(actionRequest);
     }
 
-
     @Test
     public void testCreateInvoiceWithCustomAttribute() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
@@ -87,6 +86,21 @@ public class InvoiceGatewayTest {
         InvoiceResponse.Invoice response = api.invoice().create(request);
         assertNotNull("Invoice Id", response.getId());
         System.out.printf("Created invoice %s with custom attribute%n", response.getId());
+    }  
+    
+    @Test 
+    public void testUpdateInvoiceWithCustomAttribute() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey is set", apiKey != null);
+        String number = "Inv-UpdateAttr-" + System.currentTimeMillis();
+        InvoiceResponse.Invoice created = api.invoice().create(
+                new InvoiceRequests.CreateInvoiceRequest(number, 50.0, LocalDate.now().toString(), LocalDate.now().plusMonths(1).toString(), customer));
+        assertNotNull("Invoice Id", created.getId());
+
+        InvoiceRequests.UpdateInvoiceRequest update = new InvoiceRequests.UpdateInvoiceRequest(created.getId())
+                .setExtra(Map.of("myCustomAttribute", "myValue"));
+        InvoiceResponse.Invoice updated = api.invoice().update(update);
+        assertNotNull("Updated invoice Id", updated.getId());
+        System.out.printf("Updated invoice %s with custom attribute%n", updated.getId());
     }
 
     @Test(expected = TwikeyClient.UserException.class)

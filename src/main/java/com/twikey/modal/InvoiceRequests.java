@@ -263,7 +263,7 @@ public interface InvoiceRequests {
      *   <li>ref (String): Invoice reference.</li>
      *   <li>pdf (String): Base64 encoded invoice document.</li>
      *   <li>status (String): Mark invoice as "booked", "archived" or "paid".</li>
-     *   <li>extra (String): Custom attributes in JSON or string form.</li>
+     *   <li>extra (Map): Custom attributes as key-value pairs, serialized as a JSON object under "extra".</li>
      * </ul>
      *
      * <p>Notes:</p>
@@ -281,7 +281,7 @@ public interface InvoiceRequests {
         private String ref;
         private String pdf;
         private String status;
-        private String extra;
+        private Map<String, String> extra;
 
         /**
          * @param id Unique invoice ID (required, from Twikey API)
@@ -302,7 +302,11 @@ public interface InvoiceRequests {
             putIfNotNull(result, "ref", ref);
             putIfNotNull(result, "pdf", pdf);
             putIfNotNull(result, "status", status);
-            putIfNotNull(result, "extra", extra);
+            if (extra != null) {
+                JSONObject extraJson = new JSONObject();
+                extra.forEach(extraJson::put);
+                result.put("extra", extraJson);
+            }
             return result;
         }
 
@@ -337,7 +341,7 @@ public interface InvoiceRequests {
             return this;
         }
 
-        public UpdateInvoiceRequest setExtra(String extra) {
+        public UpdateInvoiceRequest setExtra(Map<String, String> extra) {
             this.extra = extra;
             return this;
         }
