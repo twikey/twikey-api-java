@@ -53,6 +53,7 @@ public interface InvoiceRequests {
         private String ct;
         private Boolean manual;
         private List<LineItem> lines;
+        private Map<String, String> extra;
 
         public CreateInvoiceRequest(String number, Double amount, String date, String duedate, DocumentRequests.Customer customer) {
             this.number = number;
@@ -138,6 +139,11 @@ public interface InvoiceRequests {
             return this;
         }
 
+        public CreateInvoiceRequest setExtra(Map<String, String> extra) {
+            this.extra = extra;
+            return this;
+        }
+
         /**
          * Converts this request to a Map suitable for API submission.
          */
@@ -179,6 +185,9 @@ public interface InvoiceRequests {
                 List<JSONObject> lineMaps = new ArrayList<>();
                 for (LineItem line : lines) lineMaps.add(line.toMap());
                 map.put("lines", lineMaps.toString());
+            }
+            if (extra != null) {
+                extra.forEach(map::put);
             }
             return map;
         }

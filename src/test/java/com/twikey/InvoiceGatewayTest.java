@@ -76,8 +76,19 @@ public class InvoiceGatewayTest {
         api.invoice().action(actionRequest);
     }
 
-
     @Test
+    public void testCreateInvoiceWithCustomAttribute() throws IOException, TwikeyClient.UserException {
+        Assume.assumeTrue("APIKey is set", apiKey != null);
+        String number = "Inv-CustomAttr-" + System.currentTimeMillis();
+        InvoiceRequests.CreateInvoiceRequest request = new InvoiceRequests.CreateInvoiceRequest(
+                number, 50.0, LocalDate.now().toString(), LocalDate.now().plusMonths(1).toString(), customer)
+                .setExtra(Map.of("myCustomAttribute", "BMW 3-Series"));
+        InvoiceResponse.Invoice response = api.invoice().create(request);
+        assertNotNull("Invoice Id", response.getId());
+        System.out.printf("Created invoice %s with custom attribute%n", response.getId());
+    }  
+    
+    @Test 
     public void testUpdateInvoiceWithCustomAttribute() throws IOException, TwikeyClient.UserException {
         Assume.assumeTrue("APIKey is set", apiKey != null);
         String number = "Inv-UpdateAttr-" + System.currentTimeMillis();
