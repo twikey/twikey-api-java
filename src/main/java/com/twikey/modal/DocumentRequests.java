@@ -259,6 +259,7 @@ public interface DocumentRequests {
                 putIfNotNull(result, "country", customer.getCountry());
                 putIfNotNull(result, "companyName", customer.getCompanyName());
                 putIfNotNull(result, "vatno", customer.getCoc());
+                putIfNotNull(result, "l", customer.getLang());
             }
             putIfNotNull(result, "l", l);
             putIfNotNull(result, "mandateNumber", mandateNumber);
@@ -778,6 +779,7 @@ public interface DocumentRequests {
                 putIfNotNull(result, "country", customer.getCountry());
                 putIfNotNull(result, "companyName", customer.getCompanyName());
                 putIfNotNull(result, "coc", customer.getCoc());
+                putIfNotNull(result, "l", customer.getLang());
             }
 
             putIfNotNull(result, "email", email);
