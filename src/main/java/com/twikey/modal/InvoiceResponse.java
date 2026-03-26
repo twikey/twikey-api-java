@@ -217,6 +217,9 @@ public interface InvoiceResponse {
             String ref
     ) {
         public static Origin fromJson(JSONObject origin) {
+            if (origin == null) {
+                return null;
+            }
             return new Origin(
                     origin.getString("object"),
                     origin.getString("id"),
@@ -228,6 +231,9 @@ public interface InvoiceResponse {
 
     record Gateway(int id, String name, GatewayType type, String iban /* nullable*/) {
         public static Gateway fromJson(JSONObject gateway) {
+            if(gateway == null) {
+                return null;
+            }
             return new Gateway(
                     gateway.getInt("id"),
                     gateway.getString("name"),
@@ -246,7 +252,9 @@ public interface InvoiceResponse {
             int actionStep
     ) {
         public static EventError parse(JSONObject json) {
-            if (json == null) return null;
+            if (json == null) {
+                return null;
+            }
             return new EventError(
                     json.getString("code"),
                     json.getString("description"),
@@ -271,15 +279,14 @@ public interface InvoiceResponse {
     ) {
         public static Event fromJson(JSONObject json) {
             Map<String, Object> details = json.getJSONObject("details").toMap();
-            return
-                    new Event(
+            return new Event(
                             json.getString("eventId"),
                             EventType.parse(json.getString("eventType")),
                             Instant.parse(json.getString("occurredAt")),
                             json.getDouble("amount"),
                             json.getString("currency"),
-                            Origin.fromJson(json.getJSONObject("origin")),
-                            Gateway.fromJson(json.getJSONObject("gateway")),
+                            Origin.fromJson(json.optJSONObject("origin")),
+                            Gateway.fromJson(json.optJSONObject("gateway")),
                             details,
                             EventError.parse(json.optJSONObject("error"))
                     );
