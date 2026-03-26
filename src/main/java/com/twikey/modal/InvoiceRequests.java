@@ -179,6 +179,7 @@ public interface InvoiceRequests {
                 putIfNotNull(jsoncustomer, "country", customer.getCountry());
                 putIfNotNull(jsoncustomer, "companyName", customer.getCompanyName());
                 putIfNotNull(jsoncustomer, "vatno", customer.getCoc());
+                putIfNotNull(jsoncustomer, "l", customer.getLang());
                 map.put("customer", jsoncustomer);
             }
             if (lines != null && !lines.isEmpty()) {
