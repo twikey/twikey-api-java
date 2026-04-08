@@ -35,6 +35,7 @@ public interface TransactionResponse {
         private int collection;
         private String reqcolldt;
         private String link;
+        private String stage;
 
         private final List<TransactionAction> actions = new ArrayList<>();
 
@@ -115,6 +116,10 @@ public interface TransactionResponse {
             return link;
         }
 
+        public String getStage() {
+            return stage;
+        }
+
         public List<TransactionAction> getActions() {
             return actions;
         }
@@ -151,6 +156,7 @@ public interface TransactionResponse {
             tx.collection = json.optInt("collection", 0);
             tx.reqcolldt = json.optString("reqcolldt", null);
             tx.link = json.optString("link", null);
+            tx.stage = json.optString("stage", null);
 
             // Parse actions if present
             if (json.has("actions")) {
@@ -201,6 +207,7 @@ public interface TransactionResponse {
             sb.append("Collection       : ").append(collection).append("\n");
             sb.append("Req Coll Dt      : ").append(reqcolldt).append("\n");
             sb.append("Link             : ").append(link).append("\n");
+            sb.append("Stage            : ").append(stage).append("\n");
 
             sb.append("Actions:\n");
             for (TransactionAction action : actions) {
