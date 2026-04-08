@@ -239,7 +239,7 @@ public class TransactionGateway {
     }
 
     /**
-     * Get updates about all mandates (new/updated/cancelled)
+     * Get updates about all transactions
      *
      * @param callback Callback for every change
      * @param sideloads items to include in the sideloading @link <a href="https://www.twikey.com/api/#transaction-feed">www.twikey.com/api/#transaction-feed</a>
